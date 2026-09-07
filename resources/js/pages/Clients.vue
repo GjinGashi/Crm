@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { Link } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import AppLayout from '@/layouts/AppLayout.vue'
+import { ref, onMounted, computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import AppLayout from '@/layouts/AppLayout.vue';
 import {
     Table,
     TableBody,
@@ -12,19 +12,18 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-
-} from '@/components/ui/table'
+} from '@/components/ui/table';
 interface Client {
-    id: number
-    name: string
-    email: string
-    phone: string | null
-    company: string | null
-    address: string | null
-    city: string | null
-    country: string | null
-    status: string
-    notes: string | null
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    company: string | null;
+    address: string | null;
+    city: string | null;
+    country: string | null;
+    status: string;
+    notes: string | null;
 }
 async function createClient() {
     const response = await fetch('/api/clients', {
@@ -33,9 +32,9 @@ async function createClient() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(form.value),
-    })
-    const client = await response.json()
-    clients.value.push(client)
+    });
+    const client = await response.json();
+    clients.value.push(client);
     form.value = {
         name: '',
         email: '',
@@ -46,11 +45,11 @@ async function createClient() {
         country: '',
         status: 'Active',
         notes: '',
-    }
+    };
 }
 
 function editClient(client: Client) {
-    editingClientId.value = client.id
+    editingClientId.value = client.id;
     form.value = {
         name: client.name,
         email: client.email,
@@ -61,11 +60,10 @@ function editClient(client: Client) {
         country: client.country ?? '',
         status: client.status,
         notes: client.notes ?? '',
-
-    }
+    };
 }
 function cancelEdit() {
-    editingClientId.value = null
+    editingClientId.value = null;
     form.value = {
         name: '',
         email: '',
@@ -76,26 +74,25 @@ function cancelEdit() {
         country: '',
         status: 'Active',
         notes: '',
-    }
+    };
 }
 async function updateClient() {
-    if (editingClientId.value === null) return
+    if (editingClientId.value === null) return;
     const response = await fetch(`/api/clients/${editingClientId.value}`, {
         method: 'PUT',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
-        body: JSON.stringify(form.value)
-
-    })
-    const updatedClient = await response.json()
+        body: JSON.stringify(form.value),
+    });
+    const updatedClient = await response.json();
     const index = clients.value.findIndex(
-        client => client.id === editingClientId.value
-    )
+        (client) => client.id === editingClientId.value,
+    );
     if (index !== -1) {
-        clients.value[index] = updatedClient
+        clients.value[index] = updatedClient;
     }
-    editingClientId.value = null
+    editingClientId.value = null;
     form.value = {
         name: '',
         email: '',
@@ -106,43 +103,40 @@ async function updateClient() {
         country: '',
         status: 'Active',
         notes: '',
-
-    }
+    };
 }
 async function deleteClient(id: number) {
     const response = await fetch(`/api/clients/${id}`, {
         method: 'DELETE',
-    })
+    });
 
     if (!response.ok) {
-        const data = await response.json()
-        alert(data.message)
-        return
+        const data = await response.json();
+        alert(data.message);
+        return;
     }
 
-    clients.value = clients.value.filter(client => client.id !== id)
+    clients.value = clients.value.filter((client) => client.id !== id);
 }
 
-
-
-const clients = ref<Client[]>([])
-const editingClientId = ref<number | null>(null)
-const search = ref('')
-const statusFilter = ref('All')
+const clients = ref<Client[]>([]);
+const editingClientId = ref<number | null>(null);
+const search = ref('');
+const statusFilter = ref('All');
 
 const filteredClients = computed(() => {
-    return clients.value.filter(client => {
+    return clients.value.filter((client) => {
         const matchesSearch = client.name
             .toLowerCase()
-            .includes(search.value.toLowerCase())
+            .includes(search.value.toLowerCase());
 
         const matchesStatus =
             statusFilter.value === 'All' ||
-            client.status === statusFilter.value
+            client.status === statusFilter.value;
 
-        return matchesSearch && matchesStatus
-    })
-})
+        return matchesSearch && matchesStatus;
+    });
+});
 const form = ref({
     name: '',
     email: '',
@@ -153,31 +147,38 @@ const form = ref({
     country: '',
     status: 'Active',
     notes: '',
-})
-
+});
 
 onMounted(async () => {
-    const response = await fetch('/api/clients')
-    clients.value = await response.json()
-})
+    const response = await fetch('/api/clients');
+    clients.value = await response.json();
+});
 </script>
 
 <template>
     <AppLayout>
-        <div class="p-6 space-y-6">
-
+        <div class="space-y-6 p-6">
             <h1 class="text-3xl font-bold tracking-tight">Clients</h1>
-            <p class="text-muted-foreground">Manage your clients and their information</p>
+            <p class="text-muted-foreground">
+                Manage your clients and their information
+            </p>
             <Input v-model="search" placeholder="Search clients by name" />
-            <select v-model="statusFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+            <select
+                v-model="statusFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            >
                 <option value="All">Filter By Status</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
                 <option value="Lead">Lead</option>
                 <option value="Archived">Archived</option>
             </select>
-            <form @submit.prevent="editingClientId ? updateClient() : createClient()" class="space-y-4">
+            <form
+                @submit.prevent="
+                    editingClientId ? updateClient() : createClient()
+                "
+                class="space-y-4"
+            >
                 <Input v-model="form.name" placeholder="Name" />
                 <Input v-model="form.email" placeholder="Email" />
                 <Input v-model="form.phone" placeholder="Phone" />
@@ -186,8 +187,10 @@ onMounted(async () => {
                 <Input v-model="form.city" placeholder="City" />
                 <Input v-model="form.country" placeholder="Country" />
 
-                <select v-model="form.status"
-                    class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2">
+                <select
+                    v-model="form.status"
+                    class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                     <option value="Lead">Lead</option>
@@ -199,7 +202,12 @@ onMounted(async () => {
                         {{ editingClientId ? 'Update Client' : 'Save Client' }}
                     </Button>
 
-                    <Button v-if="editingClientId" type="button" variant="outline" @click="cancelEdit">
+                    <Button
+                        v-if="editingClientId"
+                        type="button"
+                        variant="outline"
+                        @click="cancelEdit"
+                    >
                         Cancel
                     </Button>
                 </div>
@@ -219,7 +227,10 @@ onMounted(async () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="client in filteredClients" :key="client.id">
+                    <TableRow
+                        v-for="client in filteredClients"
+                        :key="client.id"
+                    >
                         <TableCell>{{ client.name }}</TableCell>
                         <TableCell>{{ client.email }}</TableCell>
                         <TableCell>{{ client.phone || '-' }}</TableCell>
@@ -230,14 +241,19 @@ onMounted(async () => {
                         <TableCell>{{ client.status }}</TableCell>
                         <TableCell class="space-x-2">
                             <Link :href="`/clients/${client.id}`">
-                                <Button variant="outline">
-                                    View
-                                </Button>
+                                <Button variant="outline"> View </Button>
                             </Link>
-                            <Button variant="outline" @click="editClient(client)">
+                            <Button
+                                variant="outline"
+                                @click="editClient(client)"
+                            >
                                 Edit
                             </Button>
-                            <Button variant="destructive" @click="deleteClient(client.id)">Delete</Button>
+                            <Button
+                                variant="destructive"
+                                @click="deleteClient(client.id)"
+                                >Delete</Button
+                            >
                         </TableCell>
                     </TableRow>
                 </TableBody>

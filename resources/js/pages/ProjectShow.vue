@@ -1,50 +1,49 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Link } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
-import AppLayout from '@/layouts/AppLayout.vue'
+import { ref, onMounted } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 interface Client {
-    id: number
-    name: string
+    id: number;
+    name: string;
 }
 
 interface Task {
-    id: number
-    title: string
-    description: string | null
-    status: string
-    priority: string
+    id: number;
+    title: string;
+    description: string | null;
+    status: string;
+    priority: string;
 }
 
 interface Project {
-    id: number
-    name: string
-    description: string | null
-    status: string
-    priority: string
-    start_date: string | null
-    due_date: string | null
-    budget: number | null
-    client: Client
-    tasks: Task[]
+    id: number;
+    name: string;
+    description: string | null;
+    status: string;
+    priority: string;
+    start_date: string | null;
+    due_date: string | null;
+    budget: number | null;
+    client: Client;
+    tasks: Task[];
 }
 
-const project = ref<Project | null>(null)
+const project = ref<Project | null>(null);
 
 onMounted(async () => {
-    const projectId = window.location.pathname.split('/').pop()
+    const projectId = window.location.pathname.split('/').pop();
 
-    const response = await fetch(`/api/projects/${projectId}`)
+    const response = await fetch(`/api/projects/${projectId}`);
 
-    project.value = await response.json()
-})
+    project.value = await response.json();
+});
 </script>
 
 <template>
     <AppLayout>
-        <div class="p-6 space-y-6">
-
+        <div class="space-y-6 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">
@@ -57,25 +56,19 @@ onMounted(async () => {
                 </div>
 
                 <Link href="/projects">
-                    <Button variant="outline">
-                        Back to Projects
-                    </Button>
+                    <Button variant="outline"> Back to Projects </Button>
                 </Link>
             </div>
 
             <div v-if="project" class="space-y-6">
-
-                <div class="rounded-lg border p-6 space-y-4">
+                <div class="space-y-4 rounded-lg border p-6">
                     <h2 class="text-xl font-semibold">
                         {{ project.name }}
                     </h2>
 
                     <div class="grid gap-4 md:grid-cols-2">
-
                         <div>
-                            <p class="text-sm text-muted-foreground">
-                                Client
-                            </p>
+                            <p class="text-muted-foreground text-sm">Client</p>
 
                             <p>
                                 {{ project.client?.name || '-' }}
@@ -83,9 +76,7 @@ onMounted(async () => {
                         </div>
 
                         <div>
-                            <p class="text-sm text-muted-foreground">
-                                Status
-                            </p>
+                            <p class="text-muted-foreground text-sm">Status</p>
 
                             <p>
                                 {{ project.status }}
@@ -93,7 +84,7 @@ onMounted(async () => {
                         </div>
 
                         <div>
-                            <p class="text-sm text-muted-foreground">
+                            <p class="text-muted-foreground text-sm">
                                 Priority
                             </p>
 
@@ -103,9 +94,7 @@ onMounted(async () => {
                         </div>
 
                         <div>
-                            <p class="text-sm text-muted-foreground">
-                                Budget
-                            </p>
+                            <p class="text-muted-foreground text-sm">Budget</p>
 
                             <p>
                                 {{ project.budget ?? '-' }}
@@ -113,7 +102,7 @@ onMounted(async () => {
                         </div>
 
                         <div>
-                            <p class="text-sm text-muted-foreground">
+                            <p class="text-muted-foreground text-sm">
                                 Start Date
                             </p>
 
@@ -123,7 +112,7 @@ onMounted(async () => {
                         </div>
 
                         <div>
-                            <p class="text-sm text-muted-foreground">
+                            <p class="text-muted-foreground text-sm">
                                 Due Date
                             </p>
 
@@ -133,7 +122,7 @@ onMounted(async () => {
                         </div>
 
                         <div class="md:col-span-2">
-                            <p class="text-sm text-muted-foreground">
+                            <p class="text-muted-foreground text-sm">
                                 Description
                             </p>
 
@@ -141,14 +130,11 @@ onMounted(async () => {
                                 {{ project.description || '-' }}
                             </p>
                         </div>
-
                     </div>
                 </div>
 
-                <div class="rounded-lg border p-6 space-y-4">
-                    <h2 class="text-xl font-semibold">
-                        Tasks
-                    </h2>
+                <div class="space-y-4 rounded-lg border p-6">
+                    <h2 class="text-xl font-semibold">Tasks</h2>
 
                     <div v-if="project.tasks.length === 0">
                         <p class="text-muted-foreground">
@@ -172,25 +158,19 @@ onMounted(async () => {
                                 </span>
                             </div>
 
-                            <p class="text-sm text-muted-foreground">
+                            <p class="text-muted-foreground text-sm">
                                 {{ task.description || 'No description' }}
                             </p>
 
-                            <p class="text-sm">
-                                Priority: {{ task.priority }}
-                            </p>
+                            <p class="text-sm">Priority: {{ task.priority }}</p>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div v-else>
-                <p class="text-muted-foreground">
-                    Loading project...
-                </p>
+                <p class="text-muted-foreground">Loading project...</p>
             </div>
-
         </div>
     </AppLayout>
 </template>
