@@ -29,19 +29,19 @@ Route::inertia('/clients', 'Clients')
     ->name('clients');
 Route::inertia('/clients/{client}', 'ClientShow')
     ->middleware('auth')
-    ->name('clients.show');
+    ->name('clients.details');
 Route::inertia('/projects', 'Projects')
     ->middleware('auth')
     ->name('Projects');
 Route::inertia('/projects/{project}', 'ProjectShow')
     ->middleware('auth')
-    ->name('projects.show');
+    ->name('projects.details');
 Route::inertia('/tasks', 'Tasks')
     ->middleware('auth')
     ->name('Tasks');
 Route::inertia('/tasks/{task}', 'TaskShow')
     ->middleware('auth')
-    ->name('tasks.show');
+    ->name('tasks.details');
 Route::inertia('/login', 'Auth/Login')->name('login');
 Route::inertia('/profile', 'Profile')->name('profile')->middleware('auth');
 Route::patch('/profile', [AuthController::class, 'updateProfile'])
