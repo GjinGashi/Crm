@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * @return Collection<int, Project>
      */
-    public function index()
+    public function index(): Collection
     {
         return Project::all();
     }
@@ -18,7 +20,7 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): Project
     {
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
@@ -39,7 +41,7 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Project $project)
+    public function show(Project $project): Project
     {
         return $project->load('client', 'tasks');
     }
@@ -47,7 +49,7 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Project $project)
+    public function update(Request $request, Project $project): Project
     {
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
@@ -67,7 +69,7 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Project $project)
+    public function destroy(Project $project): JsonResponse
     {
         $project->delete();
 

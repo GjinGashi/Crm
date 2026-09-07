@@ -3,17 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    public function index()
+    /**
+     * @return Collection<int, Client>
+     */
+    public function index(): Collection
     {
         return Client::all();
     }
 
-    public function store(Request $request)
+    public function store(Request $request): Client
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -32,12 +37,12 @@ class ClientController extends Controller
         return $client;
     }
 
-    public function show(Client $client)
+    public function show(Client $client): Client
     {
         return $client->load('projects');
     }
 
-    public function update(Request $request, Client $client)
+    public function update(Request $request, Client $client): Client
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -55,7 +60,7 @@ class ClientController extends Controller
         return $client;
     }
 
-    public function destroy(Client $client)
+    public function destroy(Client $client): JsonResponse
     {
         try {
             $client->delete();

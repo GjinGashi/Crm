@@ -3,19 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('Users', [
             'users' => User::all(),
         ]);
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -28,10 +30,9 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('users');
-
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -45,7 +46,7 @@ class UserController extends Controller
         return redirect()->route('users');
     }
 
-    public function destroy(User $user)
+    public function destroy(User $user): RedirectResponse
     {
 
         $user->delete();
