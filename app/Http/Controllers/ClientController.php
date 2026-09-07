@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
-
+use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
@@ -13,6 +12,7 @@ class ClientController extends Controller
     {
         return Client::all();
     }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -28,6 +28,7 @@ class ClientController extends Controller
         ]);
 
         $client = Client::create($data);
+
         return $client;
     }
 
@@ -35,6 +36,7 @@ class ClientController extends Controller
     {
         return $client->load('projects');
     }
+
     public function update(Request $request, Client $client)
     {
         $data = $request->validate([
@@ -49,19 +51,21 @@ class ClientController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
         $client->update($data);
+
         return $client;
     }
+
     public function destroy(Client $client)
     {
         try {
             $client->delete();
 
             return response()->json([
-                'message' => 'Client deleted successfully'
+                'message' => 'Client deleted successfully',
             ]);
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return response()->json([
-                'message' => 'This client cannot be deleted because they have related projects or tasks.'
+                'message' => 'This client cannot be deleted because they have related projects or tasks.',
             ], 409);
         }
     }

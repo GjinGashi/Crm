@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Project;
+use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
@@ -32,6 +32,7 @@ class ProjectController extends Controller
 
         ]);
         $project = Project::create($data);
+
         return $project;
     }
 
@@ -59,6 +60,7 @@ class ProjectController extends Controller
             'budget' => ['nullable', 'numeric', 'min:0'],
         ]);
         $project->update($data);
+
         return $project;
     }
 
@@ -68,8 +70,9 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
+
         return response()->json([
-            'message' => 'Project deleted succesfully'
+            'message' => 'Project deleted succesfully',
         ]);
     }
 }

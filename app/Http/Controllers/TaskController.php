@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Illuminate\Http\Request;
 
-
 class TaskController extends Controller
 {
     public function index()
     {
         return Task::all();
     }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -26,6 +26,7 @@ class TaskController extends Controller
             'due_date' => ['nullable', 'date'],
         ]);
         $task = Task::create($data);
+
         return $task;
     }
 
@@ -33,6 +34,7 @@ class TaskController extends Controller
     {
         return $task->load('project', 'user');
     }
+
     public function update(Request $request, Task $task)
     {
         $data = $request->validate([
@@ -47,11 +49,14 @@ class TaskController extends Controller
             'due_date' => ['nullable', 'date'],
         ]);
         $task->update($data);
+
         return $task;
     }
+
     public function destroy(Task $task)
     {
         $task->delete();
+
         return response()->json(['message' => 'Task Deleted']);
     }
 }
