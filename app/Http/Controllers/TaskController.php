@@ -14,12 +14,16 @@ class TaskController extends Controller
     }
     public function store(Request $request)
     {
-        $data=$request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'title' => 'required|min:3',
-            'description' => 'nullable',
-            'status' => 'required|in:pending,in progress,completed,cancelled',
-            'due_date' => 'nullable|date',
+        $data = $request->validate([
+            'project_id' => ['required', 'exists:projects,id'],
+            'user_id' => ['required', 'exists:users,id'],
+            'title' => ['required', 'string', 'min:3'],
+            'description' => ['nullable', 'string'],
+            'status' => ['required', 'string', 'in:Todo,In Progress,Completed,Cancelled'],
+            'priority' => ['required', 'string', 'in:Low,Medium,High,Urgent'],
+            'start_time' => ['nullable', 'date'],
+            'end_time' => ['nullable', 'date', 'after_or_equal:start_time'],
+            'due_date' => ['nullable', 'date'],
         ]);
         $task = Task::create($data);
         return $task;
@@ -27,16 +31,20 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        return $task;
+        return $task->load('project', 'user');
     }
     public function update(Request $request, Task $task)
     {
-        $data=$request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'title' => 'required|min:3',
-            'description' => 'nullable',
-            'status' => 'required|in:pending,in progress,completed,cancelled',
-            'due_date' => 'nullable|date',
+        $data = $request->validate([
+            'project_id' => ['required', 'exists:projects,id'],
+            'user_id' => ['required', 'exists:users,id'],
+            'title' => ['required', 'string', 'min:3'],
+            'description' => ['nullable', 'string'],
+            'status' => ['required', 'string', 'in:Todo,In Progress,Completed,Cancelled'],
+            'priority' => ['required', 'string', 'in:Low,Medium,High,Urgent'],
+            'start_time' => ['nullable', 'date'],
+            'end_time' => ['nullable', 'date', 'after_or_equal:start_time'],
+            'due_date' => ['nullable', 'date'],
         ]);
         $task->update($data);
         return $task;

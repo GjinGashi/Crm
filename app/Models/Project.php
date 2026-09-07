@@ -15,6 +15,10 @@ class Project extends Model
         'name',
         'description',
         'status',
+        'priority',
+        'start_date',
+        'due_date',
+        'budget',
     ];
     public function client(): BelongsTo
     {

@@ -20,11 +20,15 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $data=$request->validate([
+        $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', 'string', 'in:Planning,In Progress,On Hold,Completed,Cancelled'],
+            'priority' => ['required', 'string', 'in:Low,Medium,High,Urgent'],
+            'start_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'budget' => ['nullable', 'numeric', 'min:0'],
 
         ]);
         $project = Project::create($data);
@@ -36,7 +40,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        return $project;
+        return $project->load('client', 'tasks');
     }
 
     /**
@@ -44,11 +48,15 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        $data=$request->validate([
+        $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', 'string', 'in:Planning,In Progress,On Hold,Completed,Cancelled'],
+            'priority' => ['required', 'string', 'in:Low,Medium,High,Urgent'],
+            'start_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'budget' => ['nullable', 'numeric', 'min:0'],
         ]);
         $project->update($data);
         return $project;

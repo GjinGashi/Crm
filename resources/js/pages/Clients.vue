@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -127,7 +127,22 @@ async function deleteClient(id: number) {
 
 const clients = ref<Client[]>([])
 const editingClientId = ref<number | null>(null)
+const search = ref('')
+const statusFilter = ref('All')
 
+const filteredClients = computed(() => {
+    return clients.value.filter(client => {
+        const matchesSearch = client.name
+            .toLowerCase()
+            .includes(search.value.toLowerCase())
+
+        const matchesStatus =
+            statusFilter.value === 'All' ||
+            client.status === statusFilter.value
+
+        return matchesSearch && matchesStatus
+    })
+})
 const form = ref({
     name: '',
     email: '',
@@ -153,6 +168,15 @@ onMounted(async () => {
 
             <h1 class="text-3xl font-bold tracking-tight">Clients</h1>
             <p class="text-muted-foreground">Manage your clients and their information</p>
+            <Input v-model="search" placeholder="Search clients by name" />
+            <select v-model="statusFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <option value="All">Filter By Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Lead">Lead</option>
+                <option value="Archived">Archived</option>
+            </select>
             <form @submit.prevent="editingClientId ? updateClient() : createClient()" class="space-y-4">
                 <Input v-model="form.name" placeholder="Name" />
                 <Input v-model="form.email" placeholder="Email" />
@@ -195,7 +219,7 @@ onMounted(async () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="client in clients" :key="client.id">
+                    <TableRow v-for="client in filteredClients" :key="client.id">
                         <TableCell>{{ client.name }}</TableCell>
                         <TableCell>{{ client.email }}</TableCell>
                         <TableCell>{{ client.phone || '-' }}</TableCell>

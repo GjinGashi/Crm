@@ -7,40 +7,46 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
 
-Route::get('/', function(){
-    return inertia('Welcome',[
-     'clientsCount' =>Client::count(),
-     'projectsCount'=>Project::count(),
-     'tasksCount'=>Task::count(),
-'pendingProjects' => Project::where('status', 'pending')->count(),
-'inProgressProjects' => Project::where('status', 'in progress')->count(),
-'completedProjects' => Project::where('status', 'completed')->count(),
-'cancelledProjects' => Project::where('status', 'cancelled')->count(),
+Route::get('/', function () {
+    return inertia('Welcome', [
+        'clientsCount' => Client::count(),
+        'projectsCount' => Project::count(),
+        'tasksCount' => Task::count(),
+        'pendingProjects' => Project::where('status', 'pending')->count(),
+        'inProgressProjects' => Project::where('status', 'in progress')->count(),
+        'completedProjects' => Project::where('status', 'completed')->count(),
+        'cancelledProjects' => Project::where('status', 'cancelled')->count(),
 
-'pendingTasks' => Task::where('status', 'pending')->count(),
-'inProgressTasks' => Task::where('status', 'in progress')->count(),
-'completedTasks' => Task::where('status', 'completed')->count(),
-'cancelledTasks' => Task::where('status', 'cancelled')->count(),
+        'pendingTasks' => Task::where('status', 'pending')->count(),
+        'inProgressTasks' => Task::where('status', 'in progress')->count(),
+        'completedTasks' => Task::where('status', 'completed')->count(),
+        'cancelledTasks' => Task::where('status', 'cancelled')->count(),
     ]);
 })->middleware('auth')->name('home');
 
 Route::inertia('/clients', 'Clients')
-->middleware('auth')
-->name('clients');
+    ->middleware('auth')
+    ->name('clients');
 Route::inertia('/clients/{client}', 'ClientShow')
     ->middleware('auth')
     ->name('clients.show');
 Route::inertia('/projects', 'Projects')
-->middleware('auth')
-->name('Projects');
+    ->middleware('auth')
+    ->name('Projects');
+Route::inertia('/projects/{project}', 'ProjectShow')
+    ->middleware('auth')
+    ->name('projects.show');
 Route::inertia('/tasks', 'Tasks')
-->middleware('auth')
-->name('Tasks');
+    ->middleware('auth')
+    ->name('Tasks');
+Route::inertia('/tasks/{task}', 'TaskShow')
+    ->middleware('auth')
+    ->name('tasks.show');
 Route::inertia('/login', 'Auth/Login')->name('login');
 Route::inertia('/profile', 'Profile')->name('profile')->middleware('auth');
-Route::patch('/profile',[AuthController::class,'updateProfile'])
-->middleware('auth')
-->name('profile.update');
+Route::patch('/profile', [AuthController::class, 'updateProfile'])
+    ->middleware('auth')
+    ->name('profile.update');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/users', [UserController::class, 'index'])

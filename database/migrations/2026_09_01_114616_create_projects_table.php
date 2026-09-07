@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('status')->default('pending');
+            $table->string('status')->default('Planning');
             $table->timestamps();
         });
     }
