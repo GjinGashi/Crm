@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ interface Project {
     start_date: string | null;
     due_date: string | null;
     budget: number | null;
+    archived_at: string | null;
 }
 const projects = ref<Project[]>([]);
 const dueDateFilter = ref('');
@@ -37,9 +38,16 @@ const priorityFilter = ref('All');
 const clientFilter = ref('All');
 const statusFilter = ref('All');
 const search = ref('');
+const viewMode = ref<'active' | 'archived'>('active');
 
 const filteredProjects = computed(() => {
     return projects.value.filter((project) => {
+        const isArchived = project.archived_at != null;
+
+        const matchesView =
+            viewMode.value === 'archived' ? isArchived : !isArchived;
+
+
         const matchesSearch = project.name
             .toLowerCase()
             .includes(search.value.toLowerCase());
@@ -64,8 +72,10 @@ const filteredProjects = computed(() => {
             matchesClient &&
             matchesStatus &&
             matchesPriority &&
-            matchesDueDate
+            matchesDueDate &&
+            matchesView
         );
+
     });
 });
 const clients = ref<Client[]>([]);
@@ -79,12 +89,6 @@ const form = ref({
     start_date: '',
     due_date: '',
     budget: '' as string | number,
-});
-onMounted(async () => {
-    const projectsResponse = await fetch('/api/projects');
-    projects.value = await projectsResponse.json();
-    const clientsResponse = await fetch('/api/clients');
-    clients.value = await clientsResponse.json();
 });
 async function createProject() {
     const response = await fetch('/api/projects', {
@@ -169,9 +173,52 @@ async function deleteProject(project: Project) {
     });
     projects.value = projects.value.filter((p) => p.id !== project.id);
 }
+async function archiveProject(project: Project) {
+    const response = await fetch(`/api/projects/${project.id}/archive`, {
+        method: 'PATCH',
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        return;
+    }
+
+    projects.value = projects.value.filter((p) => p.id !== project.id);
+}
+async function restoreProject(id: number) {
+    const response = await fetch(`/api/projects/${id}/restore`, {
+        method: 'PATCH',
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        return;
+    }
+
+    projects.value = projects.value.filter((project) => project.id !== id);
+}
+async function fetchProjects() {
+    const response = await fetch(
+        `/api/projects?archived=${viewMode.value === 'archived' ? '1' : '0'}`
+    );
+
+    projects.value = await response.json();
+}
+
+onMounted(async () => {
+    await fetchProjects();
+
+    const clientsResponse = await fetch('/api/clients');
+    clients.value = await clientsResponse.json();
+});
+watch(viewMode, () => {
+    fetchProjects();
+});
 </script>
 
-```vue
+
 <template>
     <AppLayout>
         <div class="space-y-6 p-6">
@@ -180,24 +227,25 @@ async function deleteProject(project: Project) {
                 Manage Projects and their clients
             </p>
             <Input v-model="search" placeholder="Search projects by name" />
-            <select
-                v-model="clientFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-            >
+            <div class="flex gap-2">
+                <Button :variant="viewMode === 'active' ? 'default' : 'outline'" @click="viewMode = 'active'">
+                    Active
+                </Button>
+
+                <Button :variant="viewMode === 'archived' ? 'default' : 'outline'" @click="viewMode = 'archived'">
+                    Archived
+                </Button>
+            </div>
+            <select v-model="clientFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
                 <option value="All">Filter by Client</option>
 
-                <option
-                    v-for="client in clients"
-                    :key="client.id"
-                    :value="client.id"
-                >
+                <option v-for="client in clients" :key="client.id" :value="client.id">
                     {{ client.name }}
                 </option>
             </select>
-            <select
-                v-model="statusFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-            >
+            <select v-model="statusFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
                 <option value="All">Filter by Status</option>
                 <option value="Planning">Planning</option>
                 <option value="In Progress">In Progress</option>
@@ -205,10 +253,8 @@ async function deleteProject(project: Project) {
                 <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
             </select>
-            <select
-                v-model="priorityFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-            >
+            <select v-model="priorityFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
                 <option value="All">Filter by Priority</option>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -219,38 +265,24 @@ async function deleteProject(project: Project) {
                 <label class="text-sm font-medium">Filter by Due Date</label>
                 <Input v-model="dueDateFilter" type="date" />
             </div>
-            <form
-                @submit.prevent="
-                    editingProjectId ? updateProject() : createProject()
-                "
-                class="space-y-4"
-            >
+            <form @submit.prevent="
+                editingProjectId ? updateProject() : createProject()
+                " class="space-y-4">
                 <Input v-model="form.name" placeholder="Project name" />
 
-                <select
-                    v-model="form.client_id"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                >
+                <select v-model="form.client_id"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
                     <option :value="null">Select Client</option>
 
-                    <option
-                        v-for="client in clients"
-                        :key="client.id"
-                        :value="client.id"
-                    >
+                    <option v-for="client in clients" :key="client.id" :value="client.id">
                         {{ client.name }}
                     </option>
                 </select>
 
-                <Textarea
-                    v-model="form.description"
-                    placeholder="Description"
-                />
+                <Textarea v-model="form.description" placeholder="Description" />
 
-                <select
-                    v-model="form.status"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                >
+                <select v-model="form.status"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
                     <option value="Planning">Planning</option>
                     <option value="In Progress">In Progress</option>
                     <option value="On Hold">On Hold</option>
@@ -258,10 +290,8 @@ async function deleteProject(project: Project) {
                     <option value="Cancelled">Cancelled</option>
                 </select>
 
-                <select
-                    v-model="form.priority"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-                >
+                <select v-model="form.priority"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
@@ -278,13 +308,7 @@ async function deleteProject(project: Project) {
                     <Input v-model="form.due_date" type="date" />
                 </div>
 
-                <Input
-                    v-model="form.budget"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Budget"
-                />
+                <Input v-model="form.budget" type="number" min="0" step="0.01" placeholder="Budget" />
 
                 <div class="flex gap-2">
                     <Button type="submit">
@@ -293,12 +317,7 @@ async function deleteProject(project: Project) {
                         }}
                     </Button>
 
-                    <Button
-                        v-if="editingProjectId"
-                        type="button"
-                        variant="outline"
-                        @click="cancelEdit"
-                    >
+                    <Button v-if="editingProjectId" type="button" variant="outline" @click="cancelEdit">
                         Cancel
                     </Button>
                 </div>
@@ -319,10 +338,7 @@ async function deleteProject(project: Project) {
                 </TableHeader>
 
                 <TableBody>
-                    <TableRow
-                        v-for="project in filteredProjects"
-                        :key="project.id"
-                    >
+                    <TableRow v-for="project in filteredProjects" :key="project.id">
                         <TableCell>
                             {{ project.name }}
                         </TableCell>
@@ -363,17 +379,17 @@ async function deleteProject(project: Project) {
                             <Link :href="`/projects/${project.id}`">
                                 <Button variant="outline"> View </Button>
                             </Link>
-                            <Button
-                                variant="outline"
-                                @click="editProject(project)"
-                            >
+                            <Button variant="outline" @click="editProject(project)">
                                 Edit
                             </Button>
+                            <Button v-if="viewMode === 'active'" variant="outline" @click="archiveProject(project)">
+                                Archive
+                            </Button>
 
-                            <Button
-                                variant="destructive"
-                                @click="deleteProject(project)"
-                            >
+                            <Button v-else variant="outline" @click="restoreProject(project.id)">
+                                Restore
+                            </Button>
+                            <Button variant="destructive" @click="deleteProject(project)">
                                 Delete
                             </Button>
                         </TableCell>
@@ -383,4 +399,4 @@ async function deleteProject(project: Project) {
         </div>
     </AppLayout>
 </template>
-```
+

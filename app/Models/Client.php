@@ -17,6 +17,7 @@ class Client extends Model
         'country',
         'status',
         'notes',
+        'archived_at',
     ];
 
     /**

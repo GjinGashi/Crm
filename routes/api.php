@@ -13,7 +13,15 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 Route::apiResource('clients', ClientController::class)
     ->middleware('auth:sanctum');
+Route::patch('/clients/{client}/archive', [ClientController::class, 'archive'])
+    ->middleware('auth:sanctum');
+Route::patch('/clients/{client}/restore', [ClientController::class, 'restore'])
+    ->middleware('auth:sanctum');
 Route::apiResource('projects', ProjectController::class)
+    ->middleware('auth:sanctum');
+Route::patch('/projects/{project}/archive', [ProjectController::class, 'archive'])
+    ->middleware('auth:sanctum');
+Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore'])
     ->middleware('auth:sanctum');
 Route::apiResource('tasks', TaskController::class)
     ->middleware('auth:sanctum');

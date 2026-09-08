@@ -13,9 +13,13 @@ class ClientController extends Controller
     /**
      * @return Collection<int, Client>
      */
-    public function index(): Collection
+    public function index(Request $request): Collection
     {
-        return Client::all();
+        if ($request->boolean('archived')) {
+            return Client::whereNotNull('archived_at')->get();
+        }
+
+        return Client::whereNull('archived_at')->get();
     }
 
     public function store(Request $request): Client
@@ -58,6 +62,26 @@ class ClientController extends Controller
         $client->update($data);
 
         return $client;
+    }
+    public function archive(Client $client): JsonResponse
+    {
+        $client->update([
+            'archived_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Client archived successfully',
+        ]);
+    }
+    public function restore(Client $client): JsonResponse
+    {
+        $client->update([
+            'archived_at' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Client restored successfully',
+        ]);
     }
 
     public function destroy(Client $client): JsonResponse

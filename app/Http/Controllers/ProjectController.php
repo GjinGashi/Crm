@@ -12,9 +12,13 @@ class ProjectController extends Controller
     /**
      * @return Collection<int, Project>
      */
-    public function index(): Collection
+    public function index(Request $request): Collection
     {
-        return Project::all();
+        if ($request->boolean('archived')) {
+            return Project::whereNotNull('archived_at')->get();
+        }
+
+        return Project::whereNull('archived_at')->get();
     }
 
     /**
@@ -64,6 +68,26 @@ class ProjectController extends Controller
         $project->update($data);
 
         return $project;
+    }
+    public function archive(Project $project): JsonResponse
+    {
+        $project->update([
+            'archived_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Project archived successfully',
+        ]);
+    }
+    public function restore(Project $project): JsonResponse
+    {
+        $project->update([
+            'archived_at' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Project restored successfully',
+        ]);
     }
 
     /**

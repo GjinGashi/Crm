@@ -30,6 +30,7 @@ onMounted(async () => {
     client.value = await response.json();
 });
 </script>
+
 <template>
     <AppLayout>
         <div class="space-y-6 p-6">

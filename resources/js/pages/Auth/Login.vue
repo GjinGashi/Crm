@@ -11,6 +11,7 @@ const login = () => {
     });
 };
 </script>
+
 <template>
     <div
         class="bg-background flex min-h-screen items-center justify-center p-6"

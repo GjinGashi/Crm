@@ -96,6 +96,7 @@ function cancelEditing() {
     editRole.value = '';
 }
 </script>
+
 <template>
     <AppLayout>
         <Head title="Users" />
