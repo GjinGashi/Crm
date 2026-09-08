@@ -63,6 +63,7 @@ class ClientController extends Controller
 
         return $client;
     }
+
     public function archive(Client $client): JsonResponse
     {
         $client->update([
@@ -73,6 +74,7 @@ class ClientController extends Controller
             'message' => 'Client archived successfully',
         ]);
     }
+
     public function restore(Client $client): JsonResponse
     {
         $client->update([

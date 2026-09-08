@@ -69,6 +69,7 @@ class ProjectController extends Controller
 
         return $project;
     }
+
     public function archive(Project $project): JsonResponse
     {
         $project->update([
@@ -79,6 +80,7 @@ class ProjectController extends Controller
             'message' => 'Project archived successfully',
         ]);
     }
+
     public function restore(Project $project): JsonResponse
     {
         $project->update([
