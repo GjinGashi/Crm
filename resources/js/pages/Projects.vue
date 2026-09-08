@@ -47,7 +47,6 @@ const filteredProjects = computed(() => {
         const matchesView =
             viewMode.value === 'archived' ? isArchived : !isArchived;
 
-
         const matchesSearch = project.name
             .toLowerCase()
             .includes(search.value.toLowerCase());
@@ -75,7 +74,6 @@ const filteredProjects = computed(() => {
             matchesDueDate &&
             matchesView
         );
-
     });
 });
 const clients = ref<Client[]>([]);
@@ -201,7 +199,7 @@ async function restoreProject(id: number) {
 }
 async function fetchProjects() {
     const response = await fetch(
-        `/api/projects?archived=${viewMode.value === 'archived' ? '1' : '0'}`
+        `/api/projects?archived=${viewMode.value === 'archived' ? '1' : '0'}`,
     );
 
     projects.value = await response.json();
@@ -218,7 +216,6 @@ watch(viewMode, () => {
 });
 </script>
 
-
 <template>
     <AppLayout>
         <div class="space-y-6 p-6">
@@ -228,24 +225,38 @@ watch(viewMode, () => {
             </p>
             <Input v-model="search" placeholder="Search projects by name" />
             <div class="flex gap-2">
-                <Button :variant="viewMode === 'active' ? 'default' : 'outline'" @click="viewMode = 'active'">
+                <Button
+                    :variant="viewMode === 'active' ? 'default' : 'outline'"
+                    @click="viewMode = 'active'"
+                >
                     Active
                 </Button>
 
-                <Button :variant="viewMode === 'archived' ? 'default' : 'outline'" @click="viewMode = 'archived'">
+                <Button
+                    :variant="viewMode === 'archived' ? 'default' : 'outline'"
+                    @click="viewMode = 'archived'"
+                >
                     Archived
                 </Button>
             </div>
-            <select v-model="clientFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+            <select
+                v-model="clientFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            >
                 <option value="All">Filter by Client</option>
 
-                <option v-for="client in clients" :key="client.id" :value="client.id">
+                <option
+                    v-for="client in clients"
+                    :key="client.id"
+                    :value="client.id"
+                >
                     {{ client.name }}
                 </option>
             </select>
-            <select v-model="statusFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+            <select
+                v-model="statusFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            >
                 <option value="All">Filter by Status</option>
                 <option value="Planning">Planning</option>
                 <option value="In Progress">In Progress</option>
@@ -253,8 +264,10 @@ watch(viewMode, () => {
                 <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
             </select>
-            <select v-model="priorityFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+            <select
+                v-model="priorityFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            >
                 <option value="All">Filter by Priority</option>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -265,24 +278,38 @@ watch(viewMode, () => {
                 <label class="text-sm font-medium">Filter by Due Date</label>
                 <Input v-model="dueDateFilter" type="date" />
             </div>
-            <form @submit.prevent="
-                editingProjectId ? updateProject() : createProject()
-                " class="space-y-4">
+            <form
+                @submit.prevent="
+                    editingProjectId ? updateProject() : createProject()
+                "
+                class="space-y-4"
+            >
                 <Input v-model="form.name" placeholder="Project name" />
 
-                <select v-model="form.client_id"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="form.client_id"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option :value="null">Select Client</option>
 
-                    <option v-for="client in clients" :key="client.id" :value="client.id">
+                    <option
+                        v-for="client in clients"
+                        :key="client.id"
+                        :value="client.id"
+                    >
                         {{ client.name }}
                     </option>
                 </select>
 
-                <Textarea v-model="form.description" placeholder="Description" />
+                <Textarea
+                    v-model="form.description"
+                    placeholder="Description"
+                />
 
-                <select v-model="form.status"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="form.status"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option value="Planning">Planning</option>
                     <option value="In Progress">In Progress</option>
                     <option value="On Hold">On Hold</option>
@@ -290,8 +317,10 @@ watch(viewMode, () => {
                     <option value="Cancelled">Cancelled</option>
                 </select>
 
-                <select v-model="form.priority"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="form.priority"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
@@ -308,7 +337,13 @@ watch(viewMode, () => {
                     <Input v-model="form.due_date" type="date" />
                 </div>
 
-                <Input v-model="form.budget" type="number" min="0" step="0.01" placeholder="Budget" />
+                <Input
+                    v-model="form.budget"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="Budget"
+                />
 
                 <div class="flex gap-2">
                     <Button type="submit">
@@ -317,7 +352,12 @@ watch(viewMode, () => {
                         }}
                     </Button>
 
-                    <Button v-if="editingProjectId" type="button" variant="outline" @click="cancelEdit">
+                    <Button
+                        v-if="editingProjectId"
+                        type="button"
+                        variant="outline"
+                        @click="cancelEdit"
+                    >
                         Cancel
                     </Button>
                 </div>
@@ -338,7 +378,10 @@ watch(viewMode, () => {
                 </TableHeader>
 
                 <TableBody>
-                    <TableRow v-for="project in filteredProjects" :key="project.id">
+                    <TableRow
+                        v-for="project in filteredProjects"
+                        :key="project.id"
+                    >
                         <TableCell>
                             {{ project.name }}
                         </TableCell>
@@ -379,17 +422,31 @@ watch(viewMode, () => {
                             <Link :href="`/projects/${project.id}`">
                                 <Button variant="outline"> View </Button>
                             </Link>
-                            <Button variant="outline" @click="editProject(project)">
+                            <Button
+                                variant="outline"
+                                @click="editProject(project)"
+                            >
                                 Edit
                             </Button>
-                            <Button v-if="viewMode === 'active'" variant="outline" @click="archiveProject(project)">
+                            <Button
+                                v-if="viewMode === 'active'"
+                                variant="outline"
+                                @click="archiveProject(project)"
+                            >
                                 Archive
                             </Button>
 
-                            <Button v-else variant="outline" @click="restoreProject(project.id)">
+                            <Button
+                                v-else
+                                variant="outline"
+                                @click="restoreProject(project.id)"
+                            >
                                 Restore
                             </Button>
-                            <Button variant="destructive" @click="deleteProject(project)">
+                            <Button
+                                variant="destructive"
+                                @click="deleteProject(project)"
+                            >
                                 Delete
                             </Button>
                         </TableCell>
@@ -399,4 +456,3 @@ watch(viewMode, () => {
         </div>
     </AppLayout>
 </template>
-

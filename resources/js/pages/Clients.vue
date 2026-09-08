@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed,watch } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -185,7 +185,7 @@ const form = ref({
 
 async function fetchClients() {
     const response = await fetch(
-        `/api/clients?archived=${viewMode.value === 'archived' ? '1' : '0'}`
+        `/api/clients?archived=${viewMode.value === 'archived' ? '1' : '0'}`,
     );
 
     clients.value = await response.json();
@@ -208,26 +208,37 @@ watch(viewMode, () => {
             </p>
             <Input v-model="search" placeholder="Search clients by name" />
             <div class="flex gap-2">
-                <Button :variant="viewMode === 'active' ? 'default' : 'outline'" @click="viewMode = 'active'">
+                <Button
+                    :variant="viewMode === 'active' ? 'default' : 'outline'"
+                    @click="viewMode = 'active'"
+                >
                     Active
                 </Button>
 
-                <Button :variant="viewMode === 'archived' ? 'default' : 'outline'" @click="viewMode = 'archived'">
+                <Button
+                    :variant="viewMode === 'archived' ? 'default' : 'outline'"
+                    @click="viewMode = 'archived'"
+                >
                     Archived
                 </Button>
             </div>
 
-            <select v-model="statusFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+            <select
+                v-model="statusFilter"
+                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            >
                 <option value="All">Filter By Status</option>
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
                 <option value="Lead">Lead</option>
                 <option value="Archived">Archived</option>
             </select>
-            <form @submit.prevent="
-                editingClientId ? updateClient() : createClient()
-                " class="space-y-4">
+            <form
+                @submit.prevent="
+                    editingClientId ? updateClient() : createClient()
+                "
+                class="space-y-4"
+            >
                 <Input v-model="form.name" placeholder="Name" />
                 <Input v-model="form.email" placeholder="Email" />
                 <Input v-model="form.phone" placeholder="Phone" />
@@ -236,8 +247,10 @@ watch(viewMode, () => {
                 <Input v-model="form.city" placeholder="City" />
                 <Input v-model="form.country" placeholder="Country" />
 
-                <select v-model="form.status"
-                    class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none">
+                <select
+                    v-model="form.status"
+                    class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                     <option value="Lead">Lead</option>
@@ -249,7 +262,12 @@ watch(viewMode, () => {
                         {{ editingClientId ? 'Update Client' : 'Save Client' }}
                     </Button>
 
-                    <Button v-if="editingClientId" type="button" variant="outline" @click="cancelEdit">
+                    <Button
+                        v-if="editingClientId"
+                        type="button"
+                        variant="outline"
+                        @click="cancelEdit"
+                    >
                         Cancel
                     </Button>
                 </div>
@@ -269,7 +287,10 @@ watch(viewMode, () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="client in filteredClients" :key="client.id">
+                    <TableRow
+                        v-for="client in filteredClients"
+                        :key="client.id"
+                    >
                         <TableCell>{{ client.name }}</TableCell>
                         <TableCell>{{ client.email }}</TableCell>
                         <TableCell>{{ client.phone || '-' }}</TableCell>
@@ -282,16 +303,31 @@ watch(viewMode, () => {
                             <Link :href="`/clients/${client.id}`">
                                 <Button variant="outline"> View </Button>
                             </Link>
-                            <Button variant="outline" @click="editClient(client)">
+                            <Button
+                                variant="outline"
+                                @click="editClient(client)"
+                            >
                                 Edit
                             </Button>
-                            <Button v-if="viewMode === 'active'" variant="outline" @click="archiveClient(client.id)">
+                            <Button
+                                v-if="viewMode === 'active'"
+                                variant="outline"
+                                @click="archiveClient(client.id)"
+                            >
                                 Archive
                             </Button>
-                            <Button v-else variant="outline" @click="restoreClient(client.id)">
+                            <Button
+                                v-else
+                                variant="outline"
+                                @click="restoreClient(client.id)"
+                            >
                                 Restore
                             </Button>
-                            <Button variant="destructive" @click="deleteClient(client.id)">Delete</Button>
+                            <Button
+                                variant="destructive"
+                                @click="deleteClient(client.id)"
+                                >Delete</Button
+                            >
                         </TableCell>
                     </TableRow>
                 </TableBody>
