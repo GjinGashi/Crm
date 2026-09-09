@@ -37,6 +37,7 @@ Clone the repository and enter the project directory:
 git clone https://github.com/GjinGashi/Crm.git
 cd Crm
 ```
+
 ## Environment Configuration
 
 Copy the example environment file:
@@ -55,6 +56,7 @@ Run the database migrations:
 ```bash
 php artisan migrate
 ```
+
 ## Running the Backend
 
 Start the Laravel development server:
@@ -62,6 +64,7 @@ Start the Laravel development server:
 ```bash
 php artisan serve
 ```
+
 ## Running the Frontend
 
 Start the Vite development server:
@@ -69,6 +72,7 @@ Start the Vite development server:
 ```bash
 npm run dev
 ```
+
 ## Testing
 
 Run the automated tests:
@@ -77,7 +81,10 @@ Run the automated tests:
 
 php artisan test
 ```
-## Complete Quality  Check
+
+## Complete Quality Check
+
 ```bash
 composer ci:check
 
+```
