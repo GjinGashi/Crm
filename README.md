@@ -57,6 +57,26 @@ Run the database migrations:
 php artisan migrate
 ```
 
+## Demo Data
+
+Database Seed for demo data:
+
+```bash
+php artisan db:seed
+```
+
+## Demo Accounts
+
+**Admin**
+
+- Email: `john.smith@crm-demo.test`
+- Password: `DemoPassword123!`
+
+**User**
+
+- Email: `sarah.johnson@crm-demo.test`
+- Password: `DemoPassword123!`
+
 ## Running the Backend
 
 Start the Laravel development server:
@@ -82,7 +102,7 @@ Run the automated tests:
 php artisan test
 ```
 
-## Complete Quality Check
+## Code Quality Check
 
 ```bash
 composer ci:check
