@@ -31,7 +31,6 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-
 interface Task {
     id: number;
     project_id: number;
@@ -156,7 +155,9 @@ const deleteTask = async (id: number) => {
 <template>
     <AppLayout>
         <div class="space-y-6 p-6">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight">Tasks</h1>
 
@@ -170,27 +171,42 @@ const deleteTask = async (id: number) => {
                 </Link>
             </div>
             <div
-                class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 lg:grid-cols-6">
+                class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 lg:grid-cols-6"
+            >
                 <Input v-model="search" placeholder="Search tasks by name..." />
 
-                <select v-model="projectFilter"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="projectFilter"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option value="All">Filter by Project</option>
-                    <option v-for="project in projects" :key="project.id" :value="project.id">
+                    <option
+                        v-for="project in projects"
+                        :key="project.id"
+                        :value="project.id"
+                    >
                         {{ project.name }}
                     </option>
                 </select>
 
-                <select v-model="userFilter"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="userFilter"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option value="All">Filter by User</option>
-                    <option v-for="user in users" :key="user.id" :value="user.id">
+                    <option
+                        v-for="user in users"
+                        :key="user.id"
+                        :value="user.id"
+                    >
                         {{ user.name }}
                     </option>
                 </select>
 
-                <select v-model="statusFilter"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="statusFilter"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option value="All">Filter by Status</option>
                     <option value="Todo">Todo</option>
                     <option value="In Progress">In Progress</option>
@@ -198,8 +214,10 @@ const deleteTask = async (id: number) => {
                     <option value="Canceled">Canceled</option>
                 </select>
 
-                <select v-model="priorityFilter"
-                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm">
+                <select
+                    v-model="priorityFilter"
+                    class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+                >
                     <option value="All">Filter by Priority</option>
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
@@ -208,13 +226,21 @@ const deleteTask = async (id: number) => {
                 </select>
 
                 <div class="bg-background rounded-md border px-3 py-2">
-                    <label class="text-muted-foreground mb-1 block text-xs font-medium">
+                    <label
+                        class="text-muted-foreground mb-1 block text-xs font-medium"
+                    >
                         Due Date
                     </label>
-                    <Input v-model="dueDateFilter" type="date" class="border-0 p-0 shadow-none focus-visible:ring-0" />
+                    <Input
+                        v-model="dueDateFilter"
+                        type="date"
+                        class="border-0 p-0 shadow-none focus-visible:ring-0"
+                    />
                 </div>
             </div>
-            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div
+                class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+            >
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -230,19 +256,28 @@ const deleteTask = async (id: number) => {
 
                     <TableBody>
                         <TableRow v-if="isLoading">
-                            <TableCell :colspan="7" class="text-muted-foreground h-24 text-center">
+                            <TableCell
+                                :colspan="7"
+                                class="text-muted-foreground h-24 text-center"
+                            >
                                 Loading tasks...
                             </TableCell>
                         </TableRow>
 
                         <TableRow v-else-if="error">
                             <TableCell :colspan="7" class="h-32 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
+                                <div
+                                    class="flex flex-col items-center justify-center gap-2"
+                                >
                                     <p class="text-destructive font-medium">
                                         {{ error }}
                                     </p>
 
-                                    <Button variant="outline" size="sm" @click="fetchTasks">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="fetchTasks"
+                                    >
                                         Try again
                                     </Button>
                                 </div>
@@ -251,15 +286,17 @@ const deleteTask = async (id: number) => {
 
                         <TableRow v-else-if="filteredTasks.length === 0">
                             <TableCell :colspan="7" class="h-32 text-center">
-                                <div class="flex flex-col items-center justify-center gap-1">
+                                <div
+                                    class="flex flex-col items-center justify-center gap-1"
+                                >
                                     <p class="font-medium text-slate-900">
                                         {{
                                             search ||
-                                                projectFilter !== 'All' ||
-                                                userFilter !== 'All' ||
-                                                statusFilter !== 'All' ||
-                                                priorityFilter !== 'All' ||
-                                                dueDateFilter
+                                            projectFilter !== 'All' ||
+                                            userFilter !== 'All' ||
+                                            statusFilter !== 'All' ||
+                                            priorityFilter !== 'All' ||
+                                            dueDateFilter
                                                 ? 'No tasks match your filters.'
                                                 : 'No tasks yet.'
                                         }}
@@ -268,11 +305,11 @@ const deleteTask = async (id: number) => {
                                     <p class="text-muted-foreground text-sm">
                                         {{
                                             search ||
-                                                projectFilter !== 'All' ||
-                                                userFilter !== 'All' ||
-                                                statusFilter !== 'All' ||
-                                                priorityFilter !== 'All' ||
-                                                dueDateFilter
+                                            projectFilter !== 'All' ||
+                                            userFilter !== 'All' ||
+                                            statusFilter !== 'All' ||
+                                            priorityFilter !== 'All' ||
+                                            dueDateFilter
                                                 ? 'Try adjusting your search or filters.'
                                                 : 'Create your first task to get started.'
                                         }}
@@ -281,7 +318,11 @@ const deleteTask = async (id: number) => {
                             </TableCell>
                         </TableRow>
 
-                        <TableRow v-else v-for="task in filteredTasks" :key="task.id">
+                        <TableRow
+                            v-else
+                            v-for="task in filteredTasks"
+                            :key="task.id"
+                        >
                             <TableCell>{{ task.title }}</TableCell>
 
                             <TableCell>
@@ -302,26 +343,37 @@ const deleteTask = async (id: number) => {
                             </TableCell>
 
                             <TableCell>
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
                                     :class="{
-                                        'bg-slate-100 text-slate-700': task.status === 'Todo',
-                                        'bg-blue-50 text-blue-700': task.status === 'In Progress',
+                                        'bg-slate-100 text-slate-700':
+                                            task.status === 'Todo',
+                                        'bg-blue-50 text-blue-700':
+                                            task.status === 'In Progress',
                                         'bg-emerald-50 text-emerald-700':
                                             task.status === 'Completed',
-                                        'bg-red-50 text-red-700': task.status === 'Canceled',
-                                    }">
+                                        'bg-red-50 text-red-700':
+                                            task.status === 'Canceled',
+                                    }"
+                                >
                                     {{ task.status }}
                                 </span>
                             </TableCell>
 
                             <TableCell>
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
                                     :class="{
-                                        'bg-slate-100 text-slate-700': task.priority === 'Low',
-                                        'bg-blue-50 text-blue-700': task.priority === 'Medium',
-                                        'bg-amber-50 text-amber-700': task.priority === 'High',
-                                        'bg-red-50 text-red-700': task.priority === 'Urgent',
-                                    }">
+                                        'bg-slate-100 text-slate-700':
+                                            task.priority === 'Low',
+                                        'bg-blue-50 text-blue-700':
+                                            task.priority === 'Medium',
+                                        'bg-amber-50 text-amber-700':
+                                            task.priority === 'High',
+                                        'bg-red-50 text-red-700':
+                                            task.priority === 'Urgent',
+                                    }"
+                                >
                                     {{ task.priority }}
                                 </span>
                             </TableCell>
@@ -346,15 +398,19 @@ const deleteTask = async (id: number) => {
 
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem as-child>
-                                                <Link :href="`/tasks/${task.id}/edit`">
+                                                <Link
+                                                    :href="`/tasks/${task.id}/edit`"
+                                                >
                                                     Edit
                                                 </Link>
                                             </DropdownMenuItem>
 
                                             <AlertDialog>
                                                 <AlertDialogTrigger as-child>
-                                                    <DropdownMenuItem class="text-destructive focus:text-destructive"
-                                                        @select.prevent>
+                                                    <DropdownMenuItem
+                                                        class="text-destructive focus:text-destructive"
+                                                        @select.prevent
+                                                    >
                                                         Delete
                                                     </DropdownMenuItem>
                                                 </AlertDialogTrigger>
@@ -379,16 +435,20 @@ const deleteTask = async (id: number) => {
                                                             Cancel
                                                         </AlertDialogCancel>
 
-                                                        <AlertDialogAction :disabled="actionLoading ===
-                                                            task.id
-                                                            " @click="
+                                                        <AlertDialogAction
+                                                            :disabled="
+                                                                actionLoading ===
+                                                                task.id
+                                                            "
+                                                            @click="
                                                                 deleteTask(
                                                                     task.id,
                                                                 )
-                                                                ">
+                                                            "
+                                                        >
                                                             {{
                                                                 actionLoading ===
-                                                                    task.id
+                                                                task.id
                                                                     ? 'Deleting...'
                                                                     : 'Delete'
                                                             }}
