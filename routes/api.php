@@ -29,3 +29,31 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/users', function () {
     return User::select('id', 'name')->get();
 })->middleware('auth:sanctum');
+
+Route::get('/search', function (Request $request) {
+    $query = $request->string('q')->trim();
+
+    if ($query->isEmpty()) {
+        return response()->json([
+            'clients' => [],
+            'projects' => [],
+            'tasks' => [],
+        ]);
+    }
+
+    return response()->json([
+        'clients' => \App\Models\Client::where('name', 'like', "%{$query}%")
+            ->whereNull('archived_at')
+            ->limit(5)
+            ->get(['id', 'name']),
+
+        'projects' => \App\Models\Project::where('name', 'like', "%{$query}%")
+            ->whereNull('archived_at')
+            ->limit(5)
+            ->get(['id', 'name']),
+
+        'tasks' => \App\Models\Task::where('title', 'like', "%{$query}%")
+            ->limit(5)
+            ->get(['id', 'title']),
+    ]);
+})->middleware('web','auth');

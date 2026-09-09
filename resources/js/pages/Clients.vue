@@ -3,8 +3,8 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { toast } from 'vue-sonner';
 import {
     Table,
     TableBody,
@@ -13,6 +13,23 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 interface Client {
     id: number;
     name: string;
@@ -26,132 +43,14 @@ interface Client {
     notes: string | null;
     archived_at: string | null;
 }
-async function createClient() {
-    const response = await fetch('/api/clients', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.value),
-    });
-    const client = await response.json();
-    clients.value.push(client);
-    form.value = {
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        address: '',
-        city: '',
-        country: '',
-        status: 'Active',
-        notes: '',
-    };
-}
-
-function editClient(client: Client) {
-    editingClientId.value = client.id;
-    form.value = {
-        name: client.name,
-        email: client.email,
-        phone: client.phone ?? '',
-        company: client.company ?? '',
-        address: client.address ?? '',
-        city: client.city ?? '',
-        country: client.country ?? '',
-        status: client.status,
-        notes: client.notes ?? '',
-    };
-}
-function cancelEdit() {
-    editingClientId.value = null;
-    form.value = {
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        address: '',
-        city: '',
-        country: '',
-        status: 'Active',
-        notes: '',
-    };
-}
-async function updateClient() {
-    if (editingClientId.value === null) return;
-    const response = await fetch(`/api/clients/${editingClientId.value}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.value),
-    });
-    const updatedClient = await response.json();
-    const index = clients.value.findIndex(
-        (client) => client.id === editingClientId.value,
-    );
-    if (index !== -1) {
-        clients.value[index] = updatedClient;
-    }
-    editingClientId.value = null;
-    form.value = {
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        address: '',
-        city: '',
-        country: '',
-        status: 'Active',
-        notes: '',
-    };
-}
-async function deleteClient(id: number) {
-    const response = await fetch(`/api/clients/${id}`, {
-        method: 'DELETE',
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        return;
-    }
-
-    clients.value = clients.value.filter((client) => client.id !== id);
-}
-
-async function archiveClient(id: number) {
-    const response = await fetch(`/api/clients/${id}/archive`, {
-        method: 'PATCH',
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        return;
-    }
-
-    clients.value = clients.value.filter((client) => client.id !== id);
-}
-async function restoreClient(id: number) {
-    const response = await fetch(`/api/clients/${id}/restore`, {
-        method: 'PATCH',
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        return;
-    }
-
-    clients.value = clients.value.filter((client) => client.id !== id);
-}
 
 const clients = ref<Client[]>([]);
-const editingClientId = ref<number | null>(null);
+const error = ref('');
+const isLoading = ref(true);
 const search = ref('');
 const statusFilter = ref('All');
 const viewMode = ref<'active' | 'archived'>('active');
+const actionLoading = ref<number | null>(null);
 
 const filteredClients = computed(() => {
     return clients.value.filter((client) => {
@@ -171,167 +70,337 @@ const filteredClients = computed(() => {
         return matchesView && matchesSearch && matchesStatus;
     });
 });
-const form = ref({
-    name: '',
-    email: '',
-    phone: '',
-    company: '',
-    address: '',
-    city: '',
-    country: '',
-    status: 'Active',
-    notes: '',
-});
-
 async function fetchClients() {
-    const response = await fetch(
-        `/api/clients?archived=${viewMode.value === 'archived' ? '1' : '0'}`,
-    );
+    isLoading.value = true;
+    error.value = '';
 
-    clients.value = await response.json();
+    try {
+        const response = await fetch(
+            `/api/clients?archived=${viewMode.value === 'archived' ? '1' : '0'}`,
+        );
+
+        if (!response.ok) {
+            throw new Error('Unable to load clients.');
+        }
+
+        clients.value = await response.json();
+    } catch {
+        error.value = 'Unable to load clients. Please try again.';
+    } finally {
+        isLoading.value = false;
+    }
 }
-
 onMounted(() => {
     fetchClients();
 });
+
 watch(viewMode, () => {
     fetchClients();
 });
+
+async function archiveClient(id: number) {
+    actionLoading.value = id;
+
+    try {
+        const response = await fetch(`/api/clients/${id}/archive`, {
+            method: 'PATCH',
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        clients.value = clients.value.filter((client) => client.id !== id);
+        toast.success('Client archived succesfully');
+    } finally {
+        actionLoading.value = null;
+    }
+}
+async function restoreClient(id: number) {
+    actionLoading.value = id;
+
+    try {
+        const response = await fetch(`/api/clients/${id}/restore`, {
+            method: 'PATCH',
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        clients.value = clients.value.filter((client) => client.id !== id);
+        toast.success('Client restored succesfully');
+    } finally {
+        actionLoading.value = null;
+    }
+}
+async function deleteClient(id: number) {
+    actionLoading.value = id;
+
+    try {
+        const response = await fetch(`/api/clients/${id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        clients.value = clients.value.filter((client) => client.id !== id);
+        toast.success('Client deleted successfully');
+    } finally {
+        actionLoading.value = null;
+    }
+}
 </script>
 
 <template>
     <AppLayout>
         <div class="space-y-6 p-6">
-            <h1 class="text-3xl font-bold tracking-tight">Clients</h1>
-            <p class="text-muted-foreground">
-                Manage your clients and their information
-            </p>
-            <Input v-model="search" placeholder="Search clients by name" />
-            <div class="flex gap-2">
-                <Button
-                    :variant="viewMode === 'active' ? 'default' : 'outline'"
-                    @click="viewMode = 'active'"
-                >
-                    Active
-                </Button>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1
+                        class="text-2xl font-semibold tracking-tight text-slate-900"
+                    >
+                        Clients
+                    </h1>
+                    <p class="text-muted-foreground mt-1 text-sm">
+                        Manage your clients and their information
+                    </p>
+                </div>
 
-                <Button
-                    :variant="viewMode === 'archived' ? 'default' : 'outline'"
-                    @click="viewMode = 'archived'"
-                >
-                    Archived
-                </Button>
+                <Link href="/clients/create">
+                    <Button>Add Client</Button>
+                </Link>
             </div>
+            <div
+                class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center"
+            >
+                <Input
+                    v-model="search"
+                    placeholder="Search clients by name..."
+                    class="md:max-w-sm"
+                />
+                <div class="flex gap-2">
+                    <Button
+                        :variant="viewMode === 'active' ? 'default' : 'outline'"
+                        @click="viewMode = 'active'"
+                    >
+                        Active
+                    </Button>
 
-            <select
-                v-model="statusFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-            >
-                <option value="All">Filter By Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Lead">Lead</option>
-                <option value="Archived">Archived</option>
-            </select>
-            <form
-                @submit.prevent="
-                    editingClientId ? updateClient() : createClient()
-                "
-                class="space-y-4"
-            >
-                <Input v-model="form.name" placeholder="Name" />
-                <Input v-model="form.email" placeholder="Email" />
-                <Input v-model="form.phone" placeholder="Phone" />
-                <Input v-model="form.company" placeholder="Company" />
-                <Input v-model="form.address" placeholder="Address" />
-                <Input v-model="form.city" placeholder="City" />
-                <Input v-model="form.country" placeholder="Country" />
+                    <Button
+                        :variant="
+                            viewMode === 'archived' ? 'default' : 'outline'
+                        "
+                        @click="viewMode = 'archived'"
+                    >
+                        Archived
+                    </Button>
+                </div>
 
                 <select
-                    v-model="form.status"
-                    class="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    v-model="statusFilter"
+                    class="border-input bg-background h-10 rounded-md border px-3 py-2 text-sm md:ml-auto md:w-48"
                 >
+                    <option value="All">All statuses</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                     <option value="Lead">Lead</option>
                     <option value="Archived">Archived</option>
                 </select>
-                <Textarea v-model="form.notes" placeholder="Notes"></Textarea>
-                <div class="flex gap-2">
-                    <Button type="submit">
-                        {{ editingClientId ? 'Update Client' : 'Save Client' }}
-                    </Button>
+            </div>
+            <div
+                class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+            >
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Company</TableHead>
+                            <TableHead>Address</TableHead>
+                            <TableHead>City</TableHead>
+                            <TableHead>Country</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-if="isLoading">
+                            <TableCell
+                                :colspan="9"
+                                class="text-muted-foreground h-24 text-center"
+                            >
+                                Loading clients...
+                            </TableCell>
+                        </TableRow>
+                        <TableRow v-else-if="error">
+                            <TableCell
+                                :colspan="9"
+                                class="text-destructive h-24 text-center"
+                            >
+                                {{ error }}
+                            </TableCell>
+                        </TableRow>
+                        <TableRow v-else-if="filteredClients.length === 0">
+                            <TableCell
+                                :colspan="9"
+                                class="text-muted-foreground h-24 text-center"
+                            >
+                                No clients found.
+                            </TableCell>
+                        </TableRow>
+                        <TableRow
+                            v-else
+                            v-for="client in filteredClients"
+                            :key="client.id"
+                        >
+                            <TableCell>{{ client.name }}</TableCell>
+                            <TableCell>{{ client.email }}</TableCell>
+                            <TableCell>{{ client.phone || '-' }}</TableCell>
+                            <TableCell>{{ client.company || '-' }}</TableCell>
+                            <TableCell>{{ client.address || '-' }}</TableCell>
+                            <TableCell>{{ client.city || '-' }}</TableCell>
+                            <TableCell>{{ client.country || '-' }}</TableCell>
+                            <TableCell>
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                    :class="{
+                                        'bg-emerald-50 text-emerald-700':
+                                            client.status === 'Active',
+                                        'bg-slate-100 text-slate-600':
+                                            client.status === 'Inactive',
+                                        'bg-blue-50 text-blue-700':
+                                            client.status === 'Lead',
+                                        'bg-amber-50 text-amber-700':
+                                            client.status === 'Archived',
+                                    }"
+                                >
+                                    {{ client.status }}
+                                </span>
+                            </TableCell>
+                            <TableCell>
+                                <div class="flex items-center gap-2">
+                                    <Link :href="`/clients/${client.id}`">
+                                        <Button variant="outline" size="sm"
+                                            >View</Button
+                                        >
+                                    </Link>
 
-                    <Button
-                        v-if="editingClientId"
-                        type="button"
-                        variant="outline"
-                        @click="cancelEdit"
-                    >
-                        Cancel
-                    </Button>
-                </div>
-            </form>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Company</TableHead>
-                        <TableHead>Address</TableHead>
-                        <TableHead>City</TableHead>
-                        <TableHead>Country</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow
-                        v-for="client in filteredClients"
-                        :key="client.id"
-                    >
-                        <TableCell>{{ client.name }}</TableCell>
-                        <TableCell>{{ client.email }}</TableCell>
-                        <TableCell>{{ client.phone || '-' }}</TableCell>
-                        <TableCell>{{ client.company || '-' }}</TableCell>
-                        <TableCell>{{ client.address || '-' }}</TableCell>
-                        <TableCell>{{ client.city || '-' }}</TableCell>
-                        <TableCell>{{ client.country || '-' }}</TableCell>
-                        <TableCell>{{ client.status }}</TableCell>
-                        <TableCell class="space-x-2">
-                            <Link :href="`/clients/${client.id}`">
-                                <Button variant="outline"> View </Button>
-                            </Link>
-                            <Button
-                                variant="outline"
-                                @click="editClient(client)"
-                            >
-                                Edit
-                            </Button>
-                            <Button
-                                v-if="viewMode === 'active'"
-                                variant="outline"
-                                @click="archiveClient(client.id)"
-                            >
-                                Archive
-                            </Button>
-                            <Button
-                                v-else
-                                variant="outline"
-                                @click="restoreClient(client.id)"
-                            >
-                                Restore
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                @click="deleteClient(client.id)"
-                                >Delete</Button
-                            >
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <Button variant="outline" size="sm">
+                                                Actions
+                                            </Button>
+                                        </DropdownMenuTrigger>
+
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem as-child>
+                                                <Link
+                                                    :href="`/clients/${client.id}/edit`"
+                                                >
+                                                    Edit
+                                                </Link>
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                v-if="viewMode === 'active'"
+                                                :disabled="
+                                                    actionLoading === client.id
+                                                "
+                                                @click="
+                                                    archiveClient(client.id)
+                                                "
+                                            >
+                                                {{
+                                                    actionLoading === client.id
+                                                        ? 'Archiving...'
+                                                        : 'Archive'
+                                                }}
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                v-else
+                                                :disabled="
+                                                    actionLoading === client.id
+                                                "
+                                                @click="
+                                                    restoreClient(client.id)
+                                                "
+                                            >
+                                                {{
+                                                    actionLoading === client.id
+                                                        ? 'Restoring...'
+                                                        : 'Restore'
+                                                }}
+                                            </DropdownMenuItem>
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger as-child>
+                                                    <DropdownMenuItem
+                                                        class="text-destructive focus:text-destructive"
+                                                        @select.prevent
+                                                    >
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </AlertDialogTrigger>
+
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle
+                                                            >Delete
+                                                            client?</AlertDialogTitle
+                                                        >
+                                                        <AlertDialogDescription>
+                                                            This action cannot
+                                                            be undone. This will
+                                                            permanently delete
+                                                            the client and their
+                                                            record.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel
+                                                            >Cancel</AlertDialogCancel
+                                                        >
+                                                        <AlertDialogAction
+                                                            :disabled="
+                                                                actionLoading ===
+                                                                client.id
+                                                            "
+                                                            @click="
+                                                                deleteClient(
+                                                                    client.id,
+                                                                )
+                                                            "
+                                                        >
+                                                            {{
+                                                                actionLoading ===
+                                                                client.id
+                                                                    ? 'Deleting...'
+                                                                    : 'Delete'
+                                                            }}
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     </AppLayout>
 </template>

@@ -24,10 +24,21 @@ interface Client {
     projects: Project[];
 }
 const client = ref<Client | null>(null);
+const error = ref('');
 onMounted(async () => {
     const clientId = window.location.pathname.split('/').pop();
-    const response = await fetch(`/api/clients/${clientId}`);
-    client.value = await response.json();
+
+    try {
+        const response = await fetch(`/api/clients/${clientId}`);
+
+        if (!response.ok) {
+            throw new Error('Unable to load client.');
+        }
+
+        client.value = await response.json();
+    } catch {
+        error.value = 'Unable to load client. Please try again.';
+    }
 });
 </script>
 
@@ -51,49 +62,68 @@ onMounted(async () => {
 
             <div v-if="client" class="space-y-6">
                 <div class="space-y-4 rounded-lg border p-6">
-                    <h2 class="text-xl font-semibold">
-                        {{ client.name }}
-                    </h2>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-xl font-semibold">
+                            {{ client.name }}
+                        </h2>
+
+                        <span
+                            class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                            :class="{
+                                'bg-emerald-50 text-emerald-700':
+                                    client.status === 'Active',
+                                'bg-slate-100 text-slate-600':
+                                    client.status === 'Inactive',
+                                'bg-blue-50 text-blue-700':
+                                    client.status === 'Lead',
+                                'bg-amber-50 text-amber-700':
+                                    client.status === 'Archived',
+                            }"
+                        >
+                            {{ client.status }}
+                        </span>
+                    </div>
 
                     <div class="grid gap-4 md:grid-cols-2">
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">Email</p>
-                            <p>{{ client.email }}</p>
+                            <p class="font-medium">{{ client.email }}</p>
                         </div>
 
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">Phone</p>
-                            <p>{{ client.phone || '-' }}</p>
+                            <p class="font-medium">{{ client.phone || '-' }}</p>
                         </div>
 
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">Company</p>
-                            <p>{{ client.company || '-' }}</p>
+                            <p class="font-medium">
+                                {{ client.company || '-' }}
+                            </p>
                         </div>
 
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">Address</p>
-                            <p>{{ client.address || '-' }}</p>
+                            <p class="font-medium">
+                                {{ client.address || '-' }}
+                            </p>
                         </div>
 
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">City</p>
-                            <p>{{ client.city || '-' }}</p>
+                            <p class="font-medium">{{ client.city || '-' }}</p>
                         </div>
 
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">Country</p>
-                            <p>{{ client.country || '-' }}</p>
+                            <p class="font-medium">
+                                {{ client.country || '-' }}
+                            </p>
                         </div>
 
-                        <div>
-                            <p class="text-muted-foreground text-sm">Status</p>
-                            <p>{{ client.status }}</p>
-                        </div>
-
-                        <div>
+                        <div class="rounded-lg bg-slate-50 p-3">
                             <p class="text-muted-foreground text-sm">Notes</p>
-                            <p>{{ client.notes || '-' }}</p>
+                            <p class="font-medium">{{ client.notes || '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -111,14 +141,28 @@ onMounted(async () => {
                         <div
                             v-for="project in client.projects"
                             :key="project.id"
-                            class="rounded-md border p-4"
+                            class="rounded-lg border bg-white p-4 shadow-sm"
                         >
                             <div class="flex items-center justify-between">
                                 <h3 class="font-semibold">
                                     {{ project.name }}
                                 </h3>
 
-                                <span class="text-sm">
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                    :class="{
+                                        'bg-slate-100 text-slate-700':
+                                            project.status === 'Planning',
+                                        'bg-blue-50 text-blue-700':
+                                            project.status === 'In Progress',
+                                        'bg-amber-50 text-amber-700':
+                                            project.status === 'On Hold',
+                                        'bg-emerald-50 text-emerald-700':
+                                            project.status === 'Completed',
+                                        'bg-red-50 text-red-700':
+                                            project.status === 'Canceled',
+                                    }"
+                                >
                                     {{ project.status }}
                                 </span>
                             </div>
@@ -127,12 +171,27 @@ onMounted(async () => {
                                 {{ project.description || 'No description' }}
                             </p>
 
-                            <p class="text-sm">
-                                Priority: {{ project.priority }}
-                            </p>
+                            <span
+                                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                :class="{
+                                    'bg-slate-100 text-slate-700':
+                                        project.priority === 'Low',
+                                    'bg-blue-50 text-blue-700':
+                                        project.priority === 'Medium',
+                                    'bg-orange-50 text-orange-700':
+                                        project.priority === 'High',
+                                    'bg-red-50 text-red-700':
+                                        project.priority === 'Urgent',
+                                }"
+                            >
+                                {{ project.priority }}
+                            </span>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div v-else-if="error">
+                <p class="text-destructive">{{ error }}</p>
             </div>
 
             <div v-else>

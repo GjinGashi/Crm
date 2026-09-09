@@ -3,7 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'vue-sonner';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
     Table,
@@ -13,6 +13,23 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 
 interface Client {
@@ -32,6 +49,7 @@ interface Project {
     budget: number | null;
     archived_at: string | null;
 }
+const clients = ref<Client[]>([]);
 const projects = ref<Project[]>([]);
 const dueDateFilter = ref('');
 const priorityFilter = ref('All');
@@ -39,6 +57,9 @@ const clientFilter = ref('All');
 const statusFilter = ref('All');
 const search = ref('');
 const viewMode = ref<'active' | 'archived'>('active');
+const isLoading = ref(true);
+const actionLoading = ref<number | null>(null);
+const error = ref('');
 
 const filteredProjects = computed(() => {
     return projects.value.filter((project) => {
@@ -76,133 +97,25 @@ const filteredProjects = computed(() => {
         );
     });
 });
-const clients = ref<Client[]>([]);
-const editingProjectId = ref<number | null>(null);
-const form = ref({
-    client_id: null as number | null,
-    name: '',
-    description: '',
-    status: 'Planning',
-    priority: 'Low',
-    start_date: '',
-    due_date: '',
-    budget: '' as string | number,
-});
-async function createProject() {
-    const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.value),
-    });
-    const project = await response.json();
-    projects.value.push(project);
-    form.value = {
-        client_id: null as number | null,
-        name: '',
-        description: '',
-        status: 'Planning',
-        priority: 'Low',
-        start_date: '',
-        due_date: '',
-        budget: '',
-    };
-}
-function editProject(project: Project) {
-    editingProjectId.value = project.id;
-
-    form.value = {
-        client_id: project.client_id,
-        name: project.name,
-        description: project.description ?? '',
-        status: project.status,
-        priority: project.priority,
-        start_date: project.start_date ?? '',
-        due_date: project.due_date ?? '',
-        budget: project.budget ?? '',
-    };
-}
-function cancelEdit() {
-    editingProjectId.value = null;
-    form.value = {
-        client_id: null as number | null,
-        name: '',
-        description: '',
-        status: 'Planning',
-        priority: 'Low',
-        start_date: '',
-        due_date: '',
-        budget: '',
-    };
-}
-async function updateProject() {
-    if (editingProjectId.value === null) return;
-
-    const response = await fetch(`/api/projects/${editingProjectId.value}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(form.value),
-    });
-    const updatedProject = await response.json();
-    const index = projects.value.findIndex(
-        (project) => project.id === editingProjectId.value,
-    );
-    if (index !== -1) {
-        projects.value[index] = updatedProject;
-    }
-    editingProjectId.value = null;
-    form.value = {
-        client_id: null as number | null,
-        name: '',
-        description: '',
-        status: 'Planning',
-        priority: 'Low',
-        start_date: '',
-        due_date: '',
-        budget: '',
-    };
-}
-async function deleteProject(project: Project) {
-    await fetch(`/api/projects/${project.id}`, {
-        method: 'DELETE',
-    });
-    projects.value = projects.value.filter((p) => p.id !== project.id);
-}
-async function archiveProject(project: Project) {
-    const response = await fetch(`/api/projects/${project.id}/archive`, {
-        method: 'PATCH',
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        return;
-    }
-
-    projects.value = projects.value.filter((p) => p.id !== project.id);
-}
-async function restoreProject(id: number) {
-    const response = await fetch(`/api/projects/${id}/restore`, {
-        method: 'PATCH',
-    });
-
-    if (!response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        return;
-    }
-
-    projects.value = projects.value.filter((project) => project.id !== id);
-}
 async function fetchProjects() {
-    const response = await fetch(
-        `/api/projects?archived=${viewMode.value === 'archived' ? '1' : '0'}`,
-    );
+    isLoading.value = true;
+    error.value = '';
 
-    projects.value = await response.json();
+    try {
+        const response = await fetch(
+            `/api/projects?archived=${viewMode.value === 'archived' ? '1' : '0'}`,
+        );
+
+        if (!response.ok) {
+            throw new Error('Unable to load projects.');
+        }
+
+        projects.value = await response.json();
+    } catch {
+        error.value = 'Unable to load projects. Please try again.';
+    } finally {
+        isLoading.value = false;
+    }
 }
 
 onMounted(async () => {
@@ -214,83 +127,121 @@ onMounted(async () => {
 watch(viewMode, () => {
     fetchProjects();
 });
+
+async function archiveProject(project: Project) {
+    actionLoading.value = project.id;
+
+    try {
+        const response = await fetch(`/api/projects/${project.id}/archive`, {
+            method: 'PATCH',
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        projects.value = projects.value.filter((p) => p.id !== project.id);
+        toast.success('Project archived successfully');
+    } finally {
+        actionLoading.value = null;
+    }
+}
+async function restoreProject(id: number) {
+    actionLoading.value = id;
+
+    try {
+        const response = await fetch(`/api/projects/${id}/restore`, {
+            method: 'PATCH',
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        projects.value = projects.value.filter((project) => project.id !== id);
+        toast.success('Project restored successfully');
+    } finally {
+        actionLoading.value = null;
+    }
+}
+async function deleteProject(project: Project) {
+    actionLoading.value = project.id;
+
+    try {
+        const response = await fetch(`/api/projects/${project.id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            toast.error(data.message);
+            return;
+        }
+
+        projects.value = projects.value.filter((p) => p.id !== project.id);
+        toast.success('Project deleted successfully');
+    } finally {
+        actionLoading.value = null;
+    }
+}
 </script>
 
 <template>
     <AppLayout>
         <div class="space-y-6 p-6">
-            <h1 class="text-3xl font-bold tracking-tight">Projects</h1>
-            <p class="text-muted-foreground">
-                Manage Projects and their clients
-            </p>
-            <Input v-model="search" placeholder="Search projects by name" />
-            <div class="flex gap-2">
-                <Button
-                    :variant="viewMode === 'active' ? 'default' : 'outline'"
-                    @click="viewMode = 'active'"
-                >
-                    Active
-                </Button>
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">Projects</h1>
+                    <p class="text-muted-foreground">
+                        Manage projects and their clients
+                    </p>
+                </div>
 
-                <Button
-                    :variant="viewMode === 'archived' ? 'default' : 'outline'"
-                    @click="viewMode = 'archived'"
-                >
-                    Archived
-                </Button>
+                <Link href="/projects/create">
+                    <Button> Create Project </Button>
+                </Link>
             </div>
-            <select
-                v-model="clientFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+            <div
+                class="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center"
             >
-                <option value="All">Filter by Client</option>
+                <Input
+                    v-model="search"
+                    placeholder="Search projects by name..."
+                    class="md:max-w-sm"
+                />
 
-                <option
-                    v-for="client in clients"
-                    :key="client.id"
-                    :value="client.id"
-                >
-                    {{ client.name }}
-                </option>
-            </select>
-            <select
-                v-model="statusFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-            >
-                <option value="All">Filter by Status</option>
-                <option value="Planning">Planning</option>
-                <option value="In Progress">In Progress</option>
-                <option value="On Hold">On Hold</option>
-                <option value="Completed">Completed</option>
-                <option value="Cancelled">Cancelled</option>
-            </select>
-            <select
-                v-model="priorityFilter"
-                class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
-            >
-                <option value="All">Filter by Priority</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Urgent">Urgent</option>
-            </select>
-            <div>
-                <label class="text-sm font-medium">Filter by Due Date</label>
-                <Input v-model="dueDateFilter" type="date" />
+                <div class="flex gap-2">
+                    <Button
+                        :variant="viewMode === 'active' ? 'default' : 'outline'"
+                        @click="viewMode = 'active'"
+                    >
+                        Active
+                    </Button>
+
+                    <Button
+                        :variant="
+                            viewMode === 'archived' ? 'default' : 'outline'
+                        "
+                        @click="viewMode = 'archived'"
+                    >
+                        Archived
+                    </Button>
+                </div>
             </div>
-            <form
-                @submit.prevent="
-                    editingProjectId ? updateProject() : createProject()
-                "
-                class="space-y-4"
+            <div
+                class="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2 lg:grid-cols-4"
             >
-                <Input v-model="form.name" placeholder="Project name" />
-
                 <select
-                    v-model="form.client_id"
+                    v-model="clientFilter"
                     class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                 >
-                    <option :value="null">Select Client</option>
+                    <option value="All">Filter by Client</option>
 
                     <option
                         v-for="client in clients"
@@ -301,158 +252,311 @@ watch(viewMode, () => {
                     </option>
                 </select>
 
-                <Textarea
-                    v-model="form.description"
-                    placeholder="Description"
-                />
-
                 <select
-                    v-model="form.status"
+                    v-model="statusFilter"
                     class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                 >
+                    <option value="All">Filter by Status</option>
                     <option value="Planning">Planning</option>
                     <option value="In Progress">In Progress</option>
                     <option value="On Hold">On Hold</option>
                     <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+                    <option value="Canceled">Canceled</option>
                 </select>
 
                 <select
-                    v-model="form.priority"
+                    v-model="priorityFilter"
                     class="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
                 >
+                    <option value="All">Filter by Priority</option>
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
                     <option value="Urgent">Urgent</option>
                 </select>
 
-                <div>
-                    <label class="text-sm font-medium">Start Date</label>
-                    <Input v-model="form.start_date" type="date" />
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium">Due Date</label>
-                    <Input v-model="form.due_date" type="date" />
-                </div>
-
-                <Input
-                    v-model="form.budget"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Budget"
-                />
-
-                <div class="flex gap-2">
-                    <Button type="submit">
-                        {{
-                            editingProjectId ? 'Update Project' : 'Save Project'
-                        }}
-                    </Button>
-
-                    <Button
-                        v-if="editingProjectId"
-                        type="button"
-                        variant="outline"
-                        @click="cancelEdit"
+                <div class="bg-background rounded-md border px-3 py-2">
+                    <label
+                        class="text-muted-foreground mb-1 block text-xs font-medium"
                     >
-                        Cancel
-                    </Button>
+                        Due Date
+                    </label>
+                    <Input
+                        v-model="dueDateFilter"
+                        type="date"
+                        class="border-0 p-0 shadow-none focus-visible:ring-0"
+                    />
                 </div>
-            </form>
+            </div>
+            <div
+                class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"
+            >
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Project</TableHead>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>State</TableHead>
+                            <TableHead>Priority</TableHead>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead>Budget</TableHead>
+                            <TableHead>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
 
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Start Date</TableHead>
-                        <TableHead>Due Date</TableHead>
-                        <TableHead>Budget</TableHead>
-                        <TableHead>Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                    <TableRow
-                        v-for="project in filteredProjects"
-                        :key="project.id"
-                    >
-                        <TableCell>
-                            {{ project.name }}
-                        </TableCell>
-
-                        <TableCell>
-                            {{
-                                clients.find(
-                                    (client) => client.id === project.client_id,
-                                )?.name || '-'
-                            }}
-                        </TableCell>
-
-                        <TableCell>
-                            <Badge>
-                                {{ project.status }}
-                            </Badge>
-                        </TableCell>
-
-                        <TableCell>
-                            <Badge variant="outline">
-                                {{ project.priority }}
-                            </Badge>
-                        </TableCell>
-
-                        <TableCell>
-                            {{ project.start_date || '-' }}
-                        </TableCell>
-
-                        <TableCell>
-                            {{ project.due_date || '-' }}
-                        </TableCell>
-
-                        <TableCell>
-                            {{ project.budget ?? '-' }}
-                        </TableCell>
-
-                        <TableCell class="space-x-2">
-                            <Link :href="`/projects/${project.id}`">
-                                <Button variant="outline"> View </Button>
-                            </Link>
-                            <Button
-                                variant="outline"
-                                @click="editProject(project)"
+                    <TableBody>
+                        <TableRow v-if="isLoading">
+                            <TableCell
+                                :colspan="9"
+                                class="text-muted-foreground h-24 text-center"
                             >
-                                Edit
-                            </Button>
-                            <Button
-                                v-if="viewMode === 'active'"
-                                variant="outline"
-                                @click="archiveProject(project)"
-                            >
-                                Archive
-                            </Button>
+                                Loading projects...
+                            </TableCell>
+                        </TableRow>
+                        <TableRow v-else-if="error">
+                            <TableCell :colspan="9" class="h-32 text-center">
+                                <div
+                                    class="flex flex-col items-center justify-center gap-2"
+                                >
+                                    <p class="text-destructive font-medium">
+                                        {{ error }}
+                                    </p>
 
-                            <Button
-                                v-else
-                                variant="outline"
-                                @click="restoreProject(project.id)"
-                            >
-                                Restore
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                @click="deleteProject(project)"
-                            >
-                                Delete
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        @click="fetchProjects"
+                                    >
+                                        Try again
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+
+                        <TableRow v-else-if="filteredProjects.length === 0">
+                            <TableCell :colspan="9" class="h-32 text-center">
+                                <div
+                                    class="flex flex-col items-center justify-center gap-1"
+                                >
+                                    <p class="font-medium text-slate-900">
+                                        {{
+                                            search ||
+                                            clientFilter !== 'All' ||
+                                            statusFilter !== 'All' ||
+                                            priorityFilter !== 'All' ||
+                                            dueDateFilter
+                                                ? 'No projects match your filters.'
+                                                : viewMode === 'archived'
+                                                  ? 'No archived projects.'
+                                                  : 'No projects yet.'
+                                        }}
+                                    </p>
+
+                                    <p class="text-muted-foreground text-sm">
+                                        {{
+                                            search ||
+                                            clientFilter !== 'All' ||
+                                            statusFilter !== 'All' ||
+                                            priorityFilter !== 'All' ||
+                                            dueDateFilter
+                                                ? 'Try adjusting your search or filters.'
+                                                : viewMode === 'archived'
+                                                  ? 'Archived projects will appear here.'
+                                                  : 'Create your first project to get started.'
+                                        }}
+                                    </p>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+
+                        <TableRow
+                            v-else
+                            v-for="project in filteredProjects"
+                            :key="project.id"
+                        >
+                            <TableCell>
+                                {{ project.name }}
+                            </TableCell>
+
+                            <TableCell>
+                                {{
+                                    clients.find(
+                                        (client) =>
+                                            client.id === project.client_id,
+                                    )?.name || '-'
+                                }}
+                            </TableCell>
+
+                            <TableCell>
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                    :class="{
+                                        'bg-slate-100 text-slate-700':
+                                            project.status === 'Planning',
+                                        'bg-blue-50 text-blue-700':
+                                            project.status === 'In Progress',
+                                        'bg-amber-50 text-amber-700':
+                                            project.status === 'On Hold',
+                                        'bg-emerald-50 text-emerald-700':
+                                            project.status === 'Completed',
+                                        'bg-red-50 text-red-700':
+                                            project.status === 'Canceled',
+                                    }"
+                                >
+                                    {{ project.status }}
+                                </span>
+                            </TableCell>
+                            <TableCell>
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                                    :class="{
+                                        'bg-emerald-50 text-emerald-700':
+                                            !project.archived_at,
+                                        'bg-amber-50 text-amber-700':
+                                            project.archived_at,
+                                    }"
+                                >
+                                    {{
+                                        project.archived_at
+                                            ? 'Archived'
+                                            : 'Active'
+                                    }}
+                                </span>
+                            </TableCell>
+
+                            <TableCell>
+                                <Badge variant="outline">
+                                    {{ project.priority }}
+                                </Badge>
+                            </TableCell>
+
+                            <TableCell>
+                                {{ project.start_date || '-' }}
+                            </TableCell>
+
+                            <TableCell>
+                                {{ project.due_date || '-' }}
+                            </TableCell>
+
+                            <TableCell>
+                                {{ project.budget ?? '-' }}
+                            </TableCell>
+
+                            <TableCell>
+                                <div class="flex items-center gap-2">
+                                    <Link :href="`/projects/${project.id}`">
+                                        <Button variant="outline">
+                                            View
+                                        </Button>
+                                    </Link>
+
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <Button variant="outline">
+                                                Actions
+                                            </Button>
+                                        </DropdownMenuTrigger>
+
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem as-child>
+                                                <Link
+                                                    :href="`/projects/${project.id}/edit`"
+                                                >
+                                                    Edit
+                                                </Link>
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                v-if="viewMode === 'active'"
+                                                :disabled="
+                                                    actionLoading === project.id
+                                                "
+                                                @click="archiveProject(project)"
+                                            >
+                                                {{
+                                                    actionLoading === project.id
+                                                        ? 'Archiving...'
+                                                        : 'Archive'
+                                                }}
+                                            </DropdownMenuItem>
+
+                                            <DropdownMenuItem
+                                                v-else
+                                                :disabled="
+                                                    actionLoading === project.id
+                                                "
+                                                @click="
+                                                    restoreProject(project.id)
+                                                "
+                                            >
+                                                {{
+                                                    actionLoading === project.id
+                                                        ? 'Restoring...'
+                                                        : 'Restore'
+                                                }}
+                                            </DropdownMenuItem>
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger as-child>
+                                                    <DropdownMenuItem
+                                                        class="text-destructive focus:text-destructive"
+                                                        @select.prevent
+                                                    >
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </AlertDialogTrigger>
+
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>
+                                                            Delete project?
+                                                        </AlertDialogTitle>
+
+                                                        <AlertDialogDescription>
+                                                            This action cannot
+                                                            be undone. This will
+                                                            permanently delete
+                                                            the project and its
+                                                            record.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>
+                                                            Cancel
+                                                        </AlertDialogCancel>
+
+                                                        <AlertDialogAction
+                                                            :disabled="
+                                                                actionLoading ===
+                                                                project.id
+                                                            "
+                                                            @click="
+                                                                deleteProject(
+                                                                    project,
+                                                                )
+                                                            "
+                                                        >
+                                                            {{
+                                                                actionLoading ===
+                                                                project.id
+                                                                    ? 'Deleting...'
+                                                                    : 'Delete'
+                                                            }}
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     </AppLayout>
 </template>
