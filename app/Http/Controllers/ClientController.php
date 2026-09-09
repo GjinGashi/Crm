@@ -68,7 +68,7 @@ class ClientController extends Controller
     {
         $client->update([
             'archived_at' => now(),
-             'status' => 'Archived',
+            'status' => 'Archived',
         ]);
 
         return response()->json([

@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+use App\Models\Client;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -42,18 +45,18 @@ Route::get('/search', function (Request $request) {
     }
 
     return response()->json([
-        'clients' => \App\Models\Client::where('name', 'like', "%{$query}%")
+        'clients' => Client::where('name', 'like', "%{$query}%")
             ->whereNull('archived_at')
             ->limit(5)
             ->get(['id', 'name']),
 
-        'projects' => \App\Models\Project::where('name', 'like', "%{$query}%")
+        'projects' => Project::where('name', 'like', "%{$query}%")
             ->whereNull('archived_at')
             ->limit(5)
             ->get(['id', 'name']),
 
-        'tasks' => \App\Models\Task::where('title', 'like', "%{$query}%")
+        'tasks' => Task::where('title', 'like', "%{$query}%")
             ->limit(5)
             ->get(['id', 'title']),
     ]);
-})->middleware('web','auth');
+})->middleware('web', 'auth');

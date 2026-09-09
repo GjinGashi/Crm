@@ -28,10 +28,10 @@ Route::get('/', function () {
 Route::inertia('/clients', 'Clients')
     ->middleware('auth')
     ->name('clients');
-    Route::inertia('/clients/create', 'ClientCreate')
+Route::inertia('/clients/create', 'ClientCreate')
     ->middleware('auth')
     ->name('clients.create');
-    Route::inertia('/clients/{client}/edit', 'ClientEdit')
+Route::inertia('/clients/{client}/edit', 'ClientEdit')
     ->middleware('auth')
     ->name('clients.edit');
 Route::inertia('/clients/{client}', 'ClientShow')
@@ -40,8 +40,8 @@ Route::inertia('/clients/{client}', 'ClientShow')
 Route::inertia('/projects', 'Projects')
     ->middleware('auth')
     ->name('Projects');
-        Route::get('/projects/create', function () {
-   return Inertia::render('ProjectCreate');
+Route::get('/projects/create', function () {
+    return Inertia::render('ProjectCreate');
 })->middleware('auth');
 Route::get('/projects/{project}/edit', function () {
     return Inertia::render('ProjectEdit');
@@ -52,13 +52,13 @@ Route::inertia('/projects/{project}', 'ProjectShow')
 Route::inertia('/tasks', 'Tasks')
     ->middleware('auth')
     ->name('Tasks');
-    Route::inertia('/tasks/create', 'Tasks/CreateTask')
+Route::inertia('/tasks/create', 'Tasks/CreateTask')
     ->middleware('auth')
     ->name('tasks.create');
 Route::inertia('/tasks/{task}', 'TaskShow')
     ->middleware('auth')
     ->name('tasks.details');
-   Route::get('/tasks/{task}/edit', function (App\Models\Task $task) {
+Route::get('/tasks/{task}/edit', function (Task $task) {
     return Inertia::render('Tasks/EditTask', [
         'taskId' => $task->id,
     ]);
