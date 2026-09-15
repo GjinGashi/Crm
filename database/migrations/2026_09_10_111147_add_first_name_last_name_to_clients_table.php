@@ -25,6 +25,10 @@ return new class extends Migration
 
             $parts = preg_split('/\s+/', $name, 2);
 
+            if ($parts === false) {
+                continue;
+            }
+
             $firstName = $parts[0];
             $lastName = $parts[1] ?? '';
 

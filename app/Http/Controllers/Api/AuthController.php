@@ -28,45 +28,46 @@ class AuthController extends Controller
             'user' => $user,
         ]);
     }
+
     public function updateProfile(Request $request): JsonResponse
-{
-    $data = $request->validate([
-        'first_name' => ['required', 'string', 'max:255'],
-        'last_name' => ['required', 'string', 'max:255'],
-        'email' => [
-            'required',
-            'email',
-            'unique:users,email,' . $request->user()->id,
-        ],
-        'current_password' => ['nullable', 'current_password'],
-        'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-    ]);
+    {
+        $data = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'unique:users,email,'.$request->user()->id,
+            ],
+            'current_password' => ['nullable', 'current_password'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
 
-    $user = $request->user();
+        $user = $request->user();
 
-    $user->first_name = $data['first_name'];
-    $user->last_name = $data['last_name'];
-    $user->email = $data['email'];
+        $user->first_name = $data['first_name'];
+        $user->last_name = $data['last_name'];
+        $user->email = $data['email'];
 
-    if (!empty($data['password'])) {
-        if (empty($data['current_password'])) {
-            return response()->json([
-                'errors' => [
-                    'current_password' => [
-                        'Current Password is required to change your password',
+        if (! empty($data['password'])) {
+            if (empty($data['current_password'])) {
+                return response()->json([
+                    'errors' => [
+                        'current_password' => [
+                            'Current Password is required to change your password',
+                        ],
                     ],
-                ],
-            ], 422);
+                ], 422);
+            }
+
+            $user->password = bcrypt($data['password']);
         }
 
-        $user->password = bcrypt($data['password']);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'user' => $user,
+        ]);
     }
-
-    $user->save();
-
-    return response()->json([
-        'message' => 'Profile updated successfully.',
-        'user' => $user,
-    ]);
-}
 }

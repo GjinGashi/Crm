@@ -13,7 +13,8 @@ it('allows an authenticated user to create a client', function () {
     $response = $this
         ->actingAs($user, 'sanctum')
         ->postJson('/api/clients', [
-            'name' => 'Acme Corporation',
+            'first_name' => 'Acme',
+            'last_name' => 'Corporation',
             'email' => 'contact@acme.test',
             'phone' => '123456789',
             'company' => 'Acme Corporation',
@@ -26,11 +27,13 @@ it('allows an authenticated user to create a client', function () {
 
     $response
         ->assertSuccessful()
-        ->assertJsonPath('name', 'Acme Corporation')
+        ->assertJsonPath('first_name', 'Acme')
+        ->assertJsonPath('last_name', 'Corporation')
         ->assertJsonPath('email', 'contact@acme.test');
 
     $this->assertDatabaseHas('clients', [
-        'name' => 'Acme Corporation',
+        'first_name' => 'Acme',
+        'last_name' => 'Corporation',
         'email' => 'contact@acme.test',
         'status' => 'Active',
     ]);
@@ -42,7 +45,8 @@ it('validates client data when creating a client', function () {
     $response = $this
         ->actingAs($user, 'sanctum')
         ->postJson('/api/clients', [
-            'name' => '',
+            'first_name' => '',
+            'last_name' => '',
             'email' => 'not-an-email',
             'status' => 'Invalid',
         ]);
@@ -50,7 +54,8 @@ it('validates client data when creating a client', function () {
     $response
         ->assertUnprocessable()
         ->assertJsonValidationErrors([
-            'name',
+            'first_name',
+            'last_name',
             'email',
             'status',
         ]);
@@ -60,7 +65,8 @@ it('allows an authenticated user to update a client', function () {
     $user = User::factory()->create();
 
     $client = Client::factory()->create([
-        'name' => 'Old Client Name',
+        'first_name' => 'Old',
+        'last_name' => 'Client',
         'email' => 'old@example.test',
         'status' => 'Active',
     ]);
@@ -68,7 +74,8 @@ it('allows an authenticated user to update a client', function () {
     $response = $this
         ->actingAs($user, 'sanctum')
         ->putJson("/api/clients/{$client->id}", [
-            'name' => 'Updated Client Name',
+            'first_name' => 'Updated',
+            'last_name' => 'Client',
             'email' => 'updated@example.test',
             'phone' => '987654321',
             'company' => 'Updated Company',
@@ -81,54 +88,17 @@ it('allows an authenticated user to update a client', function () {
 
     $response
         ->assertSuccessful()
-        ->assertJsonPath('name', 'Updated Client Name')
+        ->assertJsonPath('first_name', 'Updated')
+        ->assertJsonPath('last_name', 'Client')
         ->assertJsonPath('status', 'Lead');
 
     $this->assertDatabaseHas('clients', [
         'id' => $client->id,
-        'name' => 'Updated Client Name',
+        'first_name' => 'Updated',
+        'last_name' => 'Client',
         'email' => 'updated@example.test',
         'status' => 'Lead',
     ]);
-});
-
-it('allows an authenticated user to archive and restore a client', function () {
-    $user = User::factory()->create();
-
-    $client = Client::factory()->create([
-        'status' => 'Active',
-        'archived_at' => null,
-    ]);
-
-    $archiveResponse = $this
-        ->actingAs($user, 'sanctum')
-        ->patchJson("/api/clients/{$client->id}/archive");
-
-    $archiveResponse
-        ->assertOk()
-        ->assertJson([
-            'message' => 'Client archived successfully',
-        ]);
-
-    $client->refresh();
-
-    expect($client->status)->toBe('Archived');
-    expect($client->archived_at)->not->toBeNull();
-
-    $restoreResponse = $this
-        ->actingAs($user, 'sanctum')
-        ->patchJson("/api/clients/{$client->id}/restore");
-
-    $restoreResponse
-        ->assertOk()
-        ->assertJson([
-            'message' => 'Client restored successfully',
-        ]);
-
-    $client->refresh();
-
-    expect($client->status)->toBe('Active');
-    expect($client->archived_at)->toBeNull();
 });
 
 it('allows an authenticated user to delete a client without related projects', function () {

@@ -12,7 +12,8 @@ it('searches clients, projects, and tasks', function () {
     $user = User::factory()->create();
 
     $client = Client::factory()->create([
-        'name' => 'Acme Corporation',
+        'first_name' => 'Acme',
+        'last_name' => 'Corporation',
         'archived_at' => null,
     ]);
 

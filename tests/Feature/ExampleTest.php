@@ -1,12 +1,7 @@
-
 <?php
 
-use App\Models\User;
+test('the API requires authentication', function () {
+    $response = $this->getJson('/api/user');
 
-test('returns a successful response', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get(route('home'));
-
-    $response->assertOk();
+    $response->assertUnauthorized();
 });

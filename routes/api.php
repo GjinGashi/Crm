@@ -1,22 +1,22 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
-use App\Http\Controllers\Api\UserController;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 Route::apiResource('users', UserController::class)
     ->only(['index', 'store', 'update', 'destroy'])
-    ->middleware('auth:sanctum');
+    ->middleware(['auth:sanctum', 'admin']);
 Route::get('/dashboard', function (Request $request) {
     return response()->json([
         'user' => $request->user(),
@@ -52,7 +52,7 @@ Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore'
     ->middleware('auth:sanctum');
 Route::apiResource('tasks', TaskController::class)
     ->middleware('auth:sanctum');
-Route::post('/login', [AuthController::class, 'login']);    
+Route::post('/login', [AuthController::class, 'login']);
 Route::get('/search', function (Request $request) {
     $query = $request->string('q')->trim();
 

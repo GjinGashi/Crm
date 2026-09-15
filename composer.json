@@ -61,8 +61,10 @@
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
-            "npm run check",
-            "npm run types:check",
+            "cd frontend && npm run lint",
+            "cd frontend && npm run type-check",
+            "cd frontend && npm run build",
+            "@types:check",
             "@test"
         ],
         "types:check": [

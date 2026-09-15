@@ -11,10 +11,10 @@ it('allows an admin to access user management', function () {
     ]);
 
     $response = $this
-        ->actingAs($admin)
-        ->get('/users');
+        ->actingAs($admin, 'sanctum')
+        ->getJson('/api/users');
 
-    $response->assertSuccessful();
+    $response->assertOk();
 });
 
 it('prevents a regular user from accessing user management', function () {
@@ -23,8 +23,8 @@ it('prevents a regular user from accessing user management', function () {
     ]);
 
     $response = $this
-        ->actingAs($user)
-        ->get('/users');
+        ->actingAs($user, 'sanctum')
+        ->getJson('/api/users');
 
     $response->assertForbidden();
 });
@@ -39,9 +39,10 @@ it('prevents a regular user from managing users', function () {
     ]);
 
     $response = $this
-        ->actingAs($user)
-        ->patch("/users/{$anotherUser->id}", [
-            'name' => 'Updated Name',
+        ->actingAs($user, 'sanctum')
+        ->patchJson("/api/users/{$anotherUser->id}", [
+            'first_name' => 'Updated',
+            'last_name' => 'Name',
             'email' => $anotherUser->email,
             'role' => 'user',
         ]);
@@ -59,14 +60,17 @@ it('allows an admin to update a user', function () {
     ]);
 
     $response = $this
-        ->actingAs($admin)
-        ->patch("/users/{$user->id}", [
-            'name' => 'Updated User',
+        ->actingAs($admin, 'sanctum')
+        ->patchJson("/api/users/{$user->id}", [
+            'first_name' => 'Updated',
+            'last_name' => 'User',
             'email' => $user->email,
             'role' => 'admin',
         ]);
 
-    $response->assertRedirect(route('users'));
+    $response
+        ->assertOk()
+        ->assertJsonPath('role', 'admin');
 
     expect($user->refresh()->role)->toBe('admin');
 });
