@@ -13,33 +13,33 @@ class ClientController extends Controller
     /**
      * @return Collection<int, Client>
      */
-   public function index(Request $request): Collection
-{
-    $query = Client::query();
+    public function index(Request $request): Collection
+    {
+        $query = Client::query();
 
-    if ($request->boolean('archived')) {
-        $query->whereNotNull('archived_at');
-    } else {
-        $query->whereNull('archived_at');
+        if ($request->boolean('archived')) {
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+
+            $query->where(function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status') && $request->status !== 'All') {
+            $query->where('status', $request->status);
+        }
+
+        return $query->get();
     }
-
-    if ($request->filled('search')) {
-        $search = $request->string('search')->toString();
-
-        $query->where(function ($query) use ($search) {
-            $query->where('first_name', 'like', "%{$search}%")
-                ->orWhere('last_name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%");
-        });
-    }
-
-    if ($request->filled('status') && $request->status !== 'All') {
-        $query->where('status', $request->status);
-    }
-
-    return $query->get();
-}
 
     public function store(Request $request): Client
     {

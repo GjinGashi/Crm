@@ -98,6 +98,7 @@ class TaskController extends Controller
 
         return response()->json(['message' => 'Task Deleted']);
     }
+
     public function archive(Task $task): Task
     {
         $task->update([
