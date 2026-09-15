@@ -1,16 +1,15 @@
+```vue
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Toaster } from '@/components/ui/sonner'
 import {
-    LayoutDashboard,
     Users,
     FolderKanban,
     CheckSquare,
     UserCircle,
     LogOut,
 } from 'lucide-vue-next'
-
 import api from '@/lib/api'
 
 interface User {
@@ -36,7 +35,6 @@ const route = useRoute()
 
 const sidebarOpen = ref(false)
 const searchQuery = ref('')
-
 const user = ref<User | null>(null)
 
 const searchResults = ref<SearchResults>({
@@ -50,7 +48,6 @@ const isSearching = ref(false)
 const pageTitle = computed(() => {
     const path = route.path
 
-    if (path === '/dashboard') return 'Dashboard'
     if (path.startsWith('/clients/')) return 'Client Details'
     if (path.startsWith('/projects/')) return 'Project Details'
     if (path.startsWith('/tasks/')) return 'Task Details'
@@ -80,7 +77,6 @@ const userFullName = computed(() => {
 async function fetchUser() {
     try {
         const response = await api.get('/user')
-
         user.value = response.data
     } catch {
         user.value = null
@@ -187,20 +183,7 @@ fetchUser()
                         </p>
 
                         <div class="space-y-1">
-                            <button
-                                type="button"
-                                class="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-all duration-200"
-                                :class="
-                                    route.path === '/dashboard'
-                                        ? 'bg-white/10 text-white ring-1 ring-white/10'
-                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                                "
-                                @click="navigate('/dashboard')"
-                            >
-                                <LayoutDashboard class="h-4 w-4 shrink-0" />
-                                <span>Dashboard</span>
-                            </button>
-
+                            <!-- Clients -->
                             <button
                                 type="button"
                                 class="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-all duration-200"
@@ -215,6 +198,7 @@ fetchUser()
                                 <span>Clients</span>
                             </button>
 
+                            <!-- Projects -->
                             <button
                                 type="button"
                                 class="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-all duration-200"
@@ -229,6 +213,7 @@ fetchUser()
                                 <span>Projects</span>
                             </button>
 
+                            <!-- Tasks -->
                             <button
                                 type="button"
                                 class="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium transition-all duration-200"
@@ -245,6 +230,7 @@ fetchUser()
                         </div>
                     </div>
 
+                    <!-- Management -->
                     <div v-if="isAdmin">
                         <p
                             class="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase"
@@ -269,6 +255,7 @@ fetchUser()
                         </div>
                     </div>
 
+                    <!-- Account -->
                     <div>
                         <p
                             class="text-muted-foreground mb-2 px-3 text-xs font-semibold tracking-wider uppercase"
@@ -386,6 +373,7 @@ fetchUser()
                                 Searching...
                             </p>
 
+                            <!-- Clients -->
                             <div
                                 v-if="searchResults.clients.length"
                             >
@@ -411,6 +399,7 @@ fetchUser()
                                 </button>
                             </div>
 
+                            <!-- Projects -->
                             <div
                                 v-if="searchResults.projects.length"
                             >
@@ -435,6 +424,7 @@ fetchUser()
                                 </button>
                             </div>
 
+                            <!-- Tasks -->
                             <div
                                 v-if="searchResults.tasks.length"
                             >

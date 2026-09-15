@@ -14,7 +14,6 @@ import Tasks from '@/views/Tasks.vue'
 import TaskShow from '@/views/TaskShow.vue'
 import CreateTask from '@/views/Tasks/CreateTask.vue'
 import EditTask from '@/views/Tasks/EditTask.vue'
-import Welcome from '@/views/Welcome.vue'
 import Users from '@/views/Users.vue'
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -95,11 +94,6 @@ const router = createRouter({
             component: EditTask,
         },
         {
-            path: '/dashboard',
-            name: 'dashboard',
-            component: Welcome,
-        },
-        {
             path: '/users',
             name: 'users',
             component: Users,
@@ -114,7 +108,7 @@ router.beforeEach((to) => {
     }
 
     if (to.path === '/login' && token) {
-        return '/dashboard'
+        return '/clients'
     }
 })
 

@@ -32,8 +32,7 @@ const login = async () => {
 
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
-
-        await router.push('/dashboard')
+        await router.push('/clients')
     } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
             if (err.response?.status === 422) {
