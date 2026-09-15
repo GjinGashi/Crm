@@ -45,13 +45,12 @@
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "cd frontend && npm install",
-            "cd frontend && npm run build"
+            "@php artisan migrate --force"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"npm run dev\" --names='server,queue,vite'"
+            "php artisan serve",
+            "php artisan queue:listen --tries=1 --timeout=0"
         ],
         "lint": [
             "pint --parallel"
@@ -61,9 +60,6 @@
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
-            "cd frontend && npm run lint",
-            "cd frontend && npm run type-check",
-            "cd frontend && npm run build",
             "@types:check",
             "@test"
         ],
