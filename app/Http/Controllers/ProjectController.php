@@ -67,7 +67,7 @@ class ProjectController extends Controller
         ]);
         $project->update($data);
 
-        return $project;
+        return $project->load('client', 'tasks');
     }
 
     public function archive(Project $project): JsonResponse

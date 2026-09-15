@@ -25,7 +25,8 @@ class ClientController extends Controller
     public function store(Request $request): Client
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'company' => ['nullable', 'string', 'max:255'],
@@ -49,7 +50,8 @@ class ClientController extends Controller
     public function update(Request $request, Client $client): Client
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'company' => ['nullable', 'string', 'max:255'],
@@ -61,7 +63,7 @@ class ClientController extends Controller
         ]);
         $client->update($data);
 
-        return $client;
+        return $client->load('projects');
     }
 
     public function archive(Client $client): JsonResponse

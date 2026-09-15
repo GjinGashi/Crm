@@ -55,7 +55,7 @@ class TaskController extends Controller
         ]);
         $task->update($data);
 
-        return $task;
+        return $task->load('project', 'user');
     }
 
     public function destroy(Task $task): JsonResponse
