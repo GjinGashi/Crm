@@ -52,6 +52,8 @@ Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore'
     ->middleware('auth:sanctum');
 Route::apiResource('tasks', TaskController::class)
     ->middleware('auth:sanctum');
+Route::patch('/tasks/{task}/archive', [TaskController::class, 'archive']);
+Route::patch('/tasks/{task}/restore', [TaskController::class, 'restore']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/search', function (Request $request) {
     $query = $request->string('q')->trim();

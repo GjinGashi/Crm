@@ -14,11 +14,37 @@ class ProjectController extends Controller
      */
     public function index(Request $request): Collection
     {
+        $query = Project::query();
+
         if ($request->boolean('archived')) {
-            return Project::whereNotNull('archived_at')->get();
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
         }
 
-        return Project::whereNull('archived_at')->get();
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('client_id') && $request->client_id !== 'All') {
+            $query->where('client_id', $request->client_id);
+        }
+
+        if ($request->filled('status') && $request->status !== 'All') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority') && $request->priority !== 'All') {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('due_date')) {
+            $query->whereDate('due_date', $request->due_date);
+        }
+
+        return $query->get();
     }
 
     /**

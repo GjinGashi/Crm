@@ -15,7 +15,8 @@ class DatabaseSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'john.smith@crm-demo.test'],
             [
-                'name' => 'John Smith',
+                'first_name' => 'John',
+                'last_name' => 'Smith',
                 'password' => 'DemoPassword123!',
                 'role' => 'admin',
             ]
@@ -24,7 +25,8 @@ class DatabaseSeeder extends Seeder
         $user = User::firstOrCreate(
             ['email' => 'sarah.johnson@crm-demo.test'],
             [
-                'name' => 'Sarah Johnson',
+                'first_name' => 'Sarah',
+                'last_name' => 'Johnson',
                 'password' => 'DemoPassword123!',
                 'role' => 'user',
             ]
@@ -33,16 +35,18 @@ class DatabaseSeeder extends Seeder
         $user2 = User::firstOrCreate(
             ['email' => 'michael.brown@crm-demo.test'],
             [
-                'name' => 'Michael Brown',
+                'first_name' => 'Michael',
+                'last_name' => 'Brown',
                 'password' => 'DemoPassword123!',
                 'role' => 'user',
             ]
         );
 
         $client1 = Client::firstOrCreate(
-            ['name' => 'Acme Solutions'],
+            ['email' => 'contact@acme.test'],
             [
-                'email' => 'contact@acme.test',
+                'first_name' => 'James',
+                'last_name' => 'Anderson',
                 'phone' => '+1 555 0101',
                 'company' => 'Acme Solutions',
                 'address' => '123 Main Street',
@@ -54,9 +58,10 @@ class DatabaseSeeder extends Seeder
         );
 
         $client2 = Client::firstOrCreate(
-            ['name' => 'TechNova'],
+            ['email' => 'hello@technova.test'],
             [
-                'email' => 'hello@technova.test',
+                'first_name' => 'Emily',
+                'last_name' => 'Wilson',
                 'phone' => '+1 555 0102',
                 'company' => 'TechNova',
                 'address' => '45 Market Road',
@@ -68,9 +73,10 @@ class DatabaseSeeder extends Seeder
         );
 
         $client3 = Client::firstOrCreate(
-            ['name' => 'Green Valley Design'],
+            ['email' => 'info@greenvalley.test'],
             [
-                'email' => 'info@greenvalley.test',
+                'first_name' => 'Daniel',
+                'last_name' => 'Taylor',
                 'phone' => '+1 555 0103',
                 'company' => 'Green Valley Design',
                 'address' => '78 Oak Avenue',

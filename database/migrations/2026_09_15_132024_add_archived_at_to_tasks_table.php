@@ -12,10 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('priority')->default('Low');
-            $table->dateTime('start_time')->nullable();
-            $table->dateTime('end_time')->nullable();
+            $table->timestamp('archived_at')->nullable()->after('due_date');
         });
     }
 
@@ -25,13 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-            $table->dropColumn([
-                'user_id',
-                'priority',
-                'start_time',
-                'end_time',
-            ]);
+            $table->dropColumn('archived_at');
         });
     }
 };

@@ -13,14 +13,33 @@ class ClientController extends Controller
     /**
      * @return Collection<int, Client>
      */
-    public function index(Request $request): Collection
-    {
-        if ($request->boolean('archived')) {
-            return Client::whereNotNull('archived_at')->get();
-        }
+   public function index(Request $request): Collection
+{
+    $query = Client::query();
 
-        return Client::whereNull('archived_at')->get();
+    if ($request->boolean('archived')) {
+        $query->whereNotNull('archived_at');
+    } else {
+        $query->whereNull('archived_at');
     }
+
+    if ($request->filled('search')) {
+        $search = $request->string('search')->toString();
+
+        $query->where(function ($query) use ($search) {
+            $query->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+        });
+    }
+
+    if ($request->filled('status') && $request->status !== 'All') {
+        $query->where('status', $request->status);
+    }
+
+    return $query->get();
+}
 
     public function store(Request $request): Client
     {

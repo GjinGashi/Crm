@@ -12,9 +12,43 @@ class TaskController extends Controller
     /**
      * @return Collection<int, Task>
      */
-    public function index(): Collection
+    public function index(Request $request): Collection
     {
-        return Task::all();
+        $query = Task::query();
+
+        if ($request->boolean('archived')) {
+            $query->whereNotNull('archived_at');
+        } else {
+            $query->whereNull('archived_at');
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+
+            $query->where('title', 'like', "%{$search}%");
+        }
+
+        if ($request->filled('project_id') && $request->project_id !== 'All') {
+            $query->where('project_id', $request->project_id);
+        }
+
+        if ($request->filled('user_id') && $request->user_id !== 'All') {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('status') && $request->status !== 'All') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority') && $request->priority !== 'All') {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('due_date')) {
+            $query->whereDate('due_date', $request->due_date);
+        }
+
+        return $query->get();
     }
 
     public function store(Request $request): Task
@@ -63,5 +97,22 @@ class TaskController extends Controller
         $task->delete();
 
         return response()->json(['message' => 'Task Deleted']);
+    }
+    public function archive(Task $task): Task
+    {
+        $task->update([
+            'archived_at' => now(),
+        ]);
+
+        return $task;
+    }
+
+    public function restore(Task $task): Task
+    {
+        $task->update([
+            'archived_at' => null,
+        ]);
+
+        return $task;
     }
 }
